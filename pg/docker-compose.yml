@@ -1,0 +1,18 @@
+version: '3.8'
+
+services: 
+  postgres:
+    image: postgres:13
+    container_name: novabank_postgres
+    environment:
+      POSTGRES_USER: CCTEPT
+      POSTGRES_PASSWORD: admin
+      POSTRGRES_DB: novabank
+    ports: 
+      - "5435:5432"
+    volumes:
+      - postgres_data:/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
