@@ -11,4 +11,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AuthService.Persistence\AuthService.Persistence.csproj" />
+    <ProjectReference Include="..\AuthService.Application\AuthService.Application.csproj" />
+  </ItemGroup>
+
 </Project>

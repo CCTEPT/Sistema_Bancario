@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net8.0": {}
+    "net8.0": {
+      "AuthService.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/AuthService.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AuthService.Domain.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "AuthService.Domain/1.0.0": {
+      "type": "project",
+      "path": "../AuthService.Domain/AuthService.Domain.csproj",
+      "msbuildProject": "../AuthService.Domain/AuthService.Domain.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net8.0": []
+    "net8.0": [
+      "AuthService.Domain >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\Roberto Catalán\\.nuget\\packages\\": {}
@@ -31,7 +50,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Domain\\AuthService.Domain.csproj": {
+              "projectPath": "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Domain\\AuthService.Domain.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

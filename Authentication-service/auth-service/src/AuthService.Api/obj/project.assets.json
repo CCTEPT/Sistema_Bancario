@@ -107,6 +107,42 @@
         "frameworkReferences": [
           "Microsoft.AspNetCore.App"
         ]
+      },
+      "AuthService.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "AuthService.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/AuthService.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AuthService.Application.dll": {}
+        }
+      },
+      "AuthService.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/AuthService.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AuthService.Domain.dll": {}
+        }
+      },
+      "AuthService.Persistence/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "AuthService.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/AuthService.Persistence.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AuthService.Persistence.dll": {}
+        }
       }
     }
   },
@@ -473,10 +509,27 @@
         "swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512",
         "swashbuckle.aspnetcore.swaggerui.nuspec"
       ]
+    },
+    "AuthService.Application/1.0.0": {
+      "type": "project",
+      "path": "../AuthService.Application/AuthService.Application.csproj",
+      "msbuildProject": "../AuthService.Application/AuthService.Application.csproj"
+    },
+    "AuthService.Domain/1.0.0": {
+      "type": "project",
+      "path": "../AuthService.Domain/AuthService.Domain.csproj",
+      "msbuildProject": "../AuthService.Domain/AuthService.Domain.csproj"
+    },
+    "AuthService.Persistence/1.0.0": {
+      "type": "project",
+      "path": "../AuthService.Persistence/AuthService.Persistence.csproj",
+      "msbuildProject": "../AuthService.Persistence/AuthService.Persistence.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "AuthService.Application >= 1.0.0",
+      "AuthService.Persistence >= 1.0.0",
       "Microsoft.AspNetCore.OpenApi >= 8.0.23",
       "Swashbuckle.AspNetCore >= 6.6.2"
     ]
@@ -505,7 +558,14 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Application\\AuthService.Application.csproj": {
+              "projectPath": "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Application\\AuthService.Application.csproj"
+            },
+            "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Persistence\\AuthService.Persistence.csproj": {
+              "projectPath": "C:\\Sistema_Bancario\\Authentication-service\\auth-service\\src\\AuthService.Persistence\\AuthService.Persistence.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
