@@ -1,0 +1,13 @@
+# Carpetas de salida (Binarios y compilación)
+[Bb]in/
+[Oo]bj/
+
+# Configuración de usuario de IDEs
+.vscode/
+.vs/
+*.user
+*.suo
+
+# Archivos de caché y logs
+*.log
+.DS_Store
