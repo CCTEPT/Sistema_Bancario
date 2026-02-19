@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AuthService.Application.DTOs;
 
 public class UpdateUserRoleDto
 {
-    // Single role per user; accept role name like "ADMIN_ROLE" or "USER_ROLE"
+    [Required(ErrorMessage = "Rolname is required...")]
     public string RoleName { get; set; } = string.Empty;
+
 }
