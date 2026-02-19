@@ -12,11 +12,215 @@ Implementa **Clean Architecture** (Arquitectura en capas) para asegurar que la l
 
 ## 🏗 Arquitectura
 
-El servicio está organizado bajo una estructura de separación de responsabilidades:
-- **API Layer**: Controladores REST, Middlewares y configuración del Pipeline.
-- **Application Layer**: Lógica de negocio, DTOs e interfaces de servicios.
-- **Domain Layer**: Entidades núcleo, constantes de roles y excepciones.
-- **Infrastructure Layer**: Persistencia (PostgreSQL), Cloudinary y servicio de Email.
+Este proyecto sigue una arquitectura en capas (Clean Architecture), separando responsabilidades en **API, Application, Domain y Persistence**.
+
+---
+
+## 📁 Raíz del Proyecto
+
+```
+.
+│   .gitignore
+│   LICENSE
+│   README.md
+│
+├── Authentication-service/
+├── pg/
+```
+
+- `.gitignore` → Archivos ignorados por Git  
+- `LICENSE` → Licencia MIT  
+- `README.md` → Documentación principal  
+- `pg/` → Contenedor Docker para PostgreSQL  
+
+---
+
+# 🏗 Arquitectura Interna
+
+Ruta principal:
+
+```
+Authentication-service/auth-service/src/
+```
+
+---
+
+# 🌐 AuthService.Api (Capa de Presentación)
+
+Contiene los controladores, middlewares y configuración del servidor.
+
+```
+AuthService.Api/
+│   Program.cs
+│   appsettings.json
+│   appsettings.Development.json
+│
+├── Controllers/
+│   ├── AuthController.cs
+│   ├── UserController.cs
+│   └── HealthController.cs
+│
+├── Middlewares/
+│   └── GlobalExceptionMiddleware.cs
+│
+├── Extensions/
+│   ├── AuthenticationExtensions.cs
+│   ├── SecurityExtensions.cs
+│   ├── RateLimitingExtensions.cs
+│   └── ServiceCollectionExtensions.cs
+│
+├── Models/
+│   ├── ErrorResponse.cs
+│   └── FormFileAdapter.cs
+│
+└── ModelBinders/
+    └── FileDataModelBinder.cs
+```
+
+### 🔹 Clases Importantes
+
+- `Program.cs` → Configuración principal del servidor
+- `AuthController` → Login, registro y autenticación
+- `UserController` → Gestión de usuarios
+- `GlobalExceptionMiddleware` → Manejo global de errores
+
+---
+
+# 🧠 AuthService.Application (Lógica de Negocio)
+
+Aquí vive la lógica real del sistema.
+
+```
+AuthService.Application/
+│
+├── DTOs/
+├── Services/
+├── Interfaces/
+├── Validators/
+└── Exceptions/
+```
+
+### 🔹 Clases Importantes
+
+#### Servicios
+- `AuthService`
+- `UserManagementService`
+- `JwtTokenService`
+- `PasswordHashService`
+- `EmailService`
+- `CloudinaryService`
+
+#### Interfaces
+- `IAuthService`
+- `IUserManagementService`
+- `IJwtTokenService`
+- `IPasswordHashService`
+- `IEmailService`
+- `ICloudinaryService`
+
+#### DTOs
+- `LoginDto`
+- `RegisterDto`
+- `AuthResponseDto`
+- `UserResponseDto`
+- `UpdateUserRoleDto`
+
+#### Excepciones
+- `BusinessException`
+- `ErrorCodes`
+
+---
+
+# 🧱 AuthService.Domain (Reglas del Dominio)
+
+Contiene entidades y contratos del sistema.
+
+```
+AuthService.Domain/
+│
+├── Entities/
+│   ├── User.cs
+│   ├── Role.cs
+│   ├── UserProfile.cs
+│   ├── UserEmail.cs
+│   ├── UserRole.cs
+│   └── UserPasswordReset.cs
+│
+├── Interfaces/
+│   ├── IUserRepository.cs
+│   └── IRoleRepository.cs
+│
+├── Enums/
+│   └── UserRole.cs
+│
+└── Constants/
+    └── RoleConstants.cs
+```
+
+### 🔹 Entidades Clave
+
+- `User` → Entidad principal del sistema
+- `Role` → Roles del sistema
+- `UserProfile` → Información adicional del usuario
+- `UserPasswordReset` → Gestión de recuperación de contraseña
+
+---
+
+# 🗄 AuthService.Persistence (Infraestructura y Base de Datos)
+
+Implementa acceso a datos con Entity Framework Core.
+
+```
+AuthService.Persistence/
+│
+├── Data/
+│   ├── ApplicationDbContext.cs
+│   └── DataSeeder.cs
+│
+├── Repositories/
+│   ├── UserRepository.cs
+│   └── RoleRepository.cs
+│
+└── Migrations/
+```
+
+### 🔹 Clases Importantes
+
+- `ApplicationDbContext` → Configuración de EF Core
+- `DataSeeder` → Carga inicial (Admin por defecto)
+- `UserRepository` → Acceso a usuarios
+- `RoleRepository` → Acceso a roles
+
+---
+
+# 🐳 Base de Datos
+
+```
+pg/
+└── docker-compose.yml
+```
+
+Contiene la configuración del contenedor PostgreSQL.
+
+---
+
+# 🎯 Resumen Arquitectónico
+
+- **API** → Expone endpoints
+- **Application** → Contiene la lógica de negocio
+- **Domain** → Define las reglas y entidades
+- **Persistence** → Acceso a base de datos
+- **pg** → Infraestructura Docker
+
+---
+
+# 🧩 Patrón Aplicado
+
+- Clean Architecture
+- Repository Pattern
+- Dependency Injection
+- DTO Pattern
+- Middleware Global de Excepciones
 
 ---
 
@@ -53,7 +257,6 @@ El servicio está organizado bajo una estructura de separación de responsabilid
 - **Cloudinary**: Gestión de imágenes.
 - **MailKit / SMTP**: Envío de correos electrónicos.
 - **Postman**: Pruebas de integración.
-- **Swagger**: Documentación interactiva de la API.
 
 ---
 
@@ -97,6 +300,8 @@ Configura tu `appsettings.json` con las siguientes llaves:
     "DefaultAvatarPath": "default-avatar-user_kit7oq"
   }
 }
+```
+
 
 ## 🏁 Cómo ejecutar el proyecto
 
@@ -109,7 +314,7 @@ docker compose up -d
 ### 2️⃣ Compilar el proyecto
 
 ```bash
-dotnet build
+dotnet build --project AuthService.Api
 ```
 
 ### 3️⃣ Ejecutar la API
@@ -125,6 +330,7 @@ dotnet run --project AuthService.Api
 El `DataSeeder` creará automáticamente las credenciales de administrador:
 
 - **Email:** admin@local.com  
+- **Name:** admin
 - **Password:** admin  
 
 ---
