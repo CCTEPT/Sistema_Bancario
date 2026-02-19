@@ -1,6 +1,6 @@
 using System;
 using AuthService.Domain.Entities;
-//using AuthService.Application.Services;
+using AuthService.Application.Services;
 using AuthService.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,17 +16,17 @@ public class DataSeeder
             {
                 new()
                 {
-                    //Id = UuidGenerator.GenerateRoleId(),
+                    Id = UuidGenerator.GenerateRoleId(),
                     Name = RoleConstants.USER_ROLE
                 },
                 new()
                 {
-                    //Id = UuidGenerator.GenerateRoleId(),
+                    Id = UuidGenerator.GenerateRoleId(),
                     Name = RoleConstants.ADMIN_ROLE
                 },
                 new()
                 {
-                    //Id = UuidGenerator.GenerateRoleId(),
+                    Id = UuidGenerator.GenerateRoleId(),
                     Name = RoleConstants.EMPLOYEE_ROLE
                 }
             };
@@ -38,34 +38,34 @@ public class DataSeeder
             var adminRole = await context.Roles.FirstOrDefaultAsync (r => r.Name == RoleConstants.ADMIN_ROLE);
             if(adminRole != null)
             {
-                //var passwordHasher = new PasswordHashService();
-                //var userId = UuidGenerator.GenerateUserId();
-                //var profileId = UuidGenerator.GenerateUserId();
-                //var emailId = UuidGenerator.GenerateUserId();
-                //var userRoleId = UuidGenerator.GenerateUserId();
+                var passwordHasher = new PasswordHashService();
+                var userId = UuidGenerator.GenerateUserId();
+                var profileId = UuidGenerator.GenerateUserId();
+                var emailId = UuidGenerator.GenerateUserId();
+                var userRoleId = UuidGenerator.GenerateUserId();
 
                 var adminUser = new User
                 {
-                    //Id = userId,
+                    Id = userId,
                     Name = "Admin Name",
                     Surname = "Admin Surname",
                     Username = "admin",
                     Email = "admin@local.com",
-                    //Password = passwordHasher.HashPassword("admin"),
+                    Password = passwordHasher.HashPassword("admin"),
                     Status = true,
 
                     UserProfile = new UserProfile
                     {
-                        //Id = profileId,
-                        //UserId = userId,
+                        Id = profileId,
+                        UserId = userId,
                         ProfilePicture = string.Empty,
                         Phone = "00000000"
                     },
 
-                    UserEmail = new UserEmail
+                    UserEmail = new UserEmail   
                     {
-                        //Id = emailId,
-                        //UserId = userId,
+                        Id = emailId,
+                        UserId = userId,
                         EmailVerified = true,
                         EmailVerificationToken = null,
                         EmailVerificationTokenExpiry = null
@@ -75,8 +75,8 @@ public class DataSeeder
                     {
                         new UserRole
                         {
-                            //Id = userRoleId,
-                            //UserId = userId,
+                            Id = userRoleId,
+                            UserId = userId,
                             RoleId = adminRole.Id,
                         }
                     }
