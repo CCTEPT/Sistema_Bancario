@@ -10,7 +10,7 @@ namespace AuthService.Application.Services;
 public class CloudinaryService(IConfiguration configuration) : ICloudinaryService
 {
     private readonly Cloudinary _cloudinary = new(new Account(
-        configuration["CloudinarySettings:Cloudname"],
+        configuration["CloudinarySettings:CloudName"],
         configuration["CloudinarySettings:ApiKey"],
         configuration["CloudinarySettings:ApiSecret"]
     ));
