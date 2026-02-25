@@ -1,16 +1,38 @@
-# Build
-[Bb]in/
-[Oo]bj/
+# --- Carpeta de dependencias (PESADO) ---
+node_modules/
+jspm_packages/
 
-# IDE
-.vscode/
-.vs/
-*.user
-*.suo
+# --- Variables de Entorno (CRÍTICO: Datos de acceso al banco) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.sample
 
-# Logs
+# --- Build y Compilados (Lo que generas al final) ---
+dist/
+build/
+bin/
+obj/
+*.tsbuildinfo
+
+# --- Logs y Debugging ---
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Sistema
+# --- IDEs y Editores ---
+.vscode/
+.vs/
+.idea/
+*.user
+*.suo
+*.sln
+*.swp
+
+# --- Sistema Operativo ---
 .DS_Store
+Thumbs.db
