@@ -6,12 +6,10 @@ dotenv.config()
 
 const app = Fastify({ logger: true })
 
-// 🔐 Registrar JWT
 app.register(jwt, {
   secret: process.env.JWT_SECRET
 })
 
-// Registrar rutas después
 import accountRoutes from './src/routes/accountRoutes.js'
 app.register(accountRoutes)
 
