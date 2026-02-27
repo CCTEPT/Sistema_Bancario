@@ -3,61 +3,61 @@ import mongoose from 'mongoose'
 const movementSchema = new mongoose.Schema(
     {
         accountId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account',
-        required: true,
-        index: true
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Account',
+            required: true,
+            index: true
         },
 
         destinationAccountId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account'
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Account'
         },
 
         executedBy: {
-        type: String,
-        required: true
+            type: String,
+            required: true
         },
 
         movementType: {
-        type: String,
-        enum: ['DEPOSIT', 'WITHDRAW', 'TRANSFER'],
-        required: true,
-        index: true
+            type: String,
+            enum: ['DEPOSIT', 'WITHDRAW', 'TRANSFER'],
+            required: true,
+            index: true
         },
 
         status: {
-        type: String,
-        enum: ['PENDING', 'COMPLETED', 'CANCELLED', 'FAILED'],
-        default: 'PENDING'
+            type: String,
+            enum: ['PENDING', 'COMPLETED', 'CANCELLED', 'FAILED'],
+            default: 'PENDING'
         },
 
         channel: {
-        type: String,
-        enum: ['CASHIER', 'ATM', 'INTERNAL_TRANSFER', 'APP'],
-        required: true
+            type: String,
+            enum: ['CASHIER', 'ATM', 'INTERNAL_TRANSFER', 'APP'],
+            required: true
         },
 
         amount: {
-        type: Number,
-        required: true,
-        min: 0.01
+            type: Number,
+            required: true,
+            min: 0.01
         },
 
         description: {
-        type: String
+            type: String
         },
 
         date: {
-        type: Date,
-        default: Date.now,
-        index: true
+            type: Date,
+            default: Date.now,
+            index: true
         },
 
         idempotencyKey: {
-        type: String,
-        unique: true,
-        sparse: true
+            type: String,
+            unique: true,
+            sparse: true
         }
     },
     { timestamps: true }
