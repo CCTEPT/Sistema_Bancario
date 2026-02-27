@@ -6,21 +6,16 @@ export async function depositController(request, reply) {
             request.body,
             request.user.sub
         )
-        return reply.code(201).send(movement)
-    } catch (error) {
-        return reply.code(400).send({ message: error.message })
-    }
-}
 
-export async function withdrawController(request, reply) {
-    try {
-        const movement = await movementService.withdraw(
-            request.body,
-            request.user.sub
-        );
-        return reply.code(201).send(movement);
+        return reply.code(201).send({
+            status: 'Success',
+            data: movement
+        })
     } catch (error) {
-        return reply.code(400).send({ message: error.message });
+        return reply.code(400).send({ 
+            status: 'Error',
+            message: error.message 
+        })
     }
 }
 
@@ -30,8 +25,14 @@ export async function transferController(request, reply) {
             request.body,
             request.user.sub
         )
-        return reply.code(201).send(movement)
+        return reply.code(201).send({
+            status: 'Success',
+            data: movement
+        })
     } catch (error) {
-        return reply.code(400).send({ message: error.message })
+        return reply.code(400).send({ 
+            status: 'Error',
+            message: error.message 
+        })
     }
 }
