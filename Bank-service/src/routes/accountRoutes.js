@@ -1,4 +1,4 @@
-import { authenticate } from '../../middlewares/authMiddleware.js'
+import { authenticate } from '../../middlewares/authMidleware.js'
 import Account from '../models/Account.js'
 
 function generarNumeroCuenta() {
