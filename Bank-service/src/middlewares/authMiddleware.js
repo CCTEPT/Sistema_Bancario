@@ -1,4 +1,4 @@
-export async function authenticate(request, reply) {
+const authMiddleware = async (request, reply) => {
   try {
     await request.jwtVerify()
   } catch (err) {
@@ -6,3 +6,5 @@ export async function authenticate(request, reply) {
     reply.code(401).send({ message: err.message })
   }
 }
+
+export default authMiddleware
