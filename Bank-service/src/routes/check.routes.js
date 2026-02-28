@@ -1,16 +1,27 @@
-import express from "express";
 import { emitCheck, cashCheck } from "../controllers/check.controller.js";
-import { authenticateJWT } from "../middlewares/auth.middleware.js";
-import { authorizeRole } from "../middlewares/role.middleware.js";
 
-const router = express.Router();
+export default async function checkRoutes(fastify, options) {
 
-router.post("/", authenticateJWT, authorizeRole("CLIENT"), emitCheck);
+    fastify.post(
+        "/",
+        {
+            preHandler: [
+                fastify.authenticate,
+                fastify.authorizeRole("CLIENT")
+            ]
+        },
+        emitCheck
+    );
 
-router.post("/:id/cash",
-    authenticateJWT,
-    authorizeRole("EMPLOYEE"),
-    cashCheck
-);
+    fastify.post(
+        "/:id/cash",
+        {
+            preHandler: [
+                fastify.authenticate,
+                fastify.authorizeRole("EMPLOYEE")
+            ]
+        },
+        cashCheck
+    );
 
-export default router;
+}

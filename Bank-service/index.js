@@ -35,3 +35,5 @@ const start = async () => {
 }
 
 start()
+
+fastify.register(checkRoutes, { prefix: "/api/checks" }); // CATALAN SI TE SOY SINCERO ESTO NOSE DONDE VAYA NOSE DONDE USAR FASTIFY
