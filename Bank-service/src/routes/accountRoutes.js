@@ -1,4 +1,4 @@
-import { authenticate } from '../../middlewares/authMidleware.js'
+import authMiddleware from '../middlewares/authMiddleware.js'
 import Account from '../models/Account.js'
 
 function generarNumeroCuenta() {
@@ -7,7 +7,7 @@ function generarNumeroCuenta() {
 
 export default async function (app) {
 
-  app.post('/cuentas', { preHandler: authenticate }, async (request, reply) => {
+  app.post('/cuentas', { preHandler: authMiddleware }, async (request, reply) => {
 
     const { tipoCuenta, divisa } = request.body
     const idUsuario = request.user.sub
@@ -43,14 +43,11 @@ export default async function (app) {
     return reply.code(201).send(cuenta)
   })
 
-  
-  app.get('/cuentas', { preHandler: authenticate }, async (request, reply) => {
+  app.get('/cuentas', { preHandler: authMiddleware }, async (request, reply) => {
 
     const idUsuario = request.user.sub
 
-    const cuentas = await Account.find({
-      idUsuario
-    })
+    const cuentas = await Account.find({ idUsuario })
 
     return reply.code(200).send(cuentas)
   })
