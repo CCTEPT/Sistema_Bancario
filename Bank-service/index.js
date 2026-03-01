@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import accountRoutes from './src/routes/accountRoutes.js'
 import movementRoutes from './src/routes/movement.routes.js'
 import transferRoutes from './src/routes/transfer.routes.js'
-
+import checkRoutes from "./routes/check.routes.js";
 dotenv.config()
 
 const app = Fastify({ logger: true })
@@ -35,3 +35,5 @@ const start = async () => {
 }
 
 start()
+
+fastify.register(checkRoutes, { prefix: "/api/checks" }); // CATALAN SI TE SOY SINCERO ESTO NOSE DONDE VAYA NOSE DONDE USAR FASTIFY
