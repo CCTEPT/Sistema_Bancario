@@ -21,15 +21,22 @@ const movementSchema = new mongoose.Schema(
 
         movementType: {
             type: String,
-            enum: ['DEPOSIT', 'WITHDRAW', 'TRANSFER'],
+            enum: [
+                'DEPOSIT',
+                'WITHDRAW',
+                'TRANSFER_OUT',
+                'TRANSFER_IN',
+                'CHECK_ISSUE',
+                'CHECK_CASH'
+            ],
             required: true,
             index: true
         },
 
         status: {
             type: String,
-            enum: ['PENDING', 'COMPLETED', 'CANCELLED', 'FAILED'],
-            default: 'PENDING'
+            enum: ['PENDING', 'CONFIRMED'],
+            default: 'CONFIRMED'
         },
 
         channel: {
@@ -62,5 +69,9 @@ const movementSchema = new mongoose.Schema(
     },
     { timestamps: true }
 )
+
+movementSchema.index({ accountId: 1 });
+movementSchema.index({ date: -1 });
+movementSchema.index({ movementType: 1 });
 
 export default mongoose.model('Movement', movementSchema)

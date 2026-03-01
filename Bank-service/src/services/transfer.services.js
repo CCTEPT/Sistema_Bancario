@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 import Account from "../models/Account.js"
-import Movement from "../models/movement.model.js"
+import { registrarMovimiento } from "./movement.service.js"
 
 export const perfomTransfer = async (dataTransfer, userId) => {
     const session = await mongoose.startSession()
@@ -32,27 +32,27 @@ export const perfomTransfer = async (dataTransfer, userId) => {
         await destination.save({ session })
 
         // Registrar movimientos
-        await Movement.create(
-            [
-                {
-                    accountId: source._id,
-                    tipo: "Transfer out",
-                    amount
-                }
-            ],
-            { session }
-        )
+        await registrarMovimiento({
+            accountId: source._id,
+            destinationAccountId: destination._id,
+            movementType: "TRANSFER_OUT",
+            amount,
+            executedBy: userId,
+            description: "Transferencia enviada",
+            channel: "INTERNAL_TRANSFER",
+            session
+        })
 
-        await Movement.create(
-            [
-                {
-                    accountId: destination._id,
-                    tipo: "Transfer in",
-                    amount
-                }
-            ],
-            { session }
-        )
+        await registrarMovimiento({
+            accountId: destination._id,
+            destinationAccountId: source._id,
+            movementType: "TRANSFER_IN",
+            amount,
+            executedBy: userId,
+            description: "Transferencia recibida",
+            channel: "INTERNAL_TRANSFER",
+            session
+        })
 
         await session.commitTransaction()
         session.endSession()
