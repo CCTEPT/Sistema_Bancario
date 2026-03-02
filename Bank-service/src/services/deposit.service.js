@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
-import Account from '../models/Account.js'
+import Account from '../models/account.model.js'
+import Movement from '../models/movement.model.js'
 import { registrarMovimiento } from './movement.service.js'
 
 /**
@@ -28,30 +29,35 @@ export async function deposit(data, userId) {
         if (!account) {
             throw new Error('Cuenta no encontrada')
         }
-        if (account.estado !== 'activa') {
+        if (account.estado !== 'ACTIVE') {
             throw new Error('La cuenta no está activa o se encuentra bloqueada')
         }
         
         // 2. Aumentar saldo
+        const balanceBefore = account.saldo
         account.saldo += data.amount
+        const balanceAfter = account.saldo
         await account.save({ session })
         
         // 3. Registrar movimiento tipo DEPOSITO con el nuevo modelo
         const movement = await registrarMovimiento({
-        accountId: data.accountId,
-        movementType: 'DEPOSIT',
-        amount: data.amount,
-        executedBy: userId,
-        description: data.description || 'Depósito en efectivo',
-        idempotencyKey: data.idempotencyKey,
-        session
-    })
+            accountId: data.accountId,
+            movementType: 'DEPOSIT',
+            amount: data.amount,
+            executedBy: userId,
+            description: data.description || 'Depósito en efectivo',
+            idempotencyKey: data.idempotencyKey,
+            session,
+            balanceBefore,
+            balanceAfter,
+            channel: data.channel || 'CASHIER'
+        })
 
         // Si todo sale bien, confirmamos los cambios en la base de datos
         await session.commitTransaction()
         session.endSession()
         
-        return movement[0]
+        return movement
 
     } catch (error) {
         // Si algo falla, se revierte el aumento de saldo y no se crea el movimiento

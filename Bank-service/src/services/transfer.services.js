@@ -9,24 +9,48 @@ export const perfomTransfer = async (dataTransfer, userId) => {
     try {
         const { sourceAccount, destinationAccount, amount } = dataTransfer
 
-        if (!amount || amount <= 0) {
-            throw new Error("Invalid transfer amount")
+        // validaciones básicas
+        if (!amount || typeof amount !== 'number' || amount <= 0) {
+            throw new Error("El monto de transferencia debe ser un número positivo")
+        }
+        if (!sourceAccount || !destinationAccount) {
+            throw new Error("Se requieren cuentas origen y destino")
+        }
+        if (sourceAccount === destinationAccount) {
+            throw new Error("No se puede transferir a la misma cuenta")
         }
 
         const source = await Account.findById(sourceAccount).session(session)
         const destination = await Account.findById(destinationAccount).session(session)
 
-        if (!source || !destination) {
-            throw new Error("Account not found")
+        if (!source) {
+            throw new Error("Cuenta origen no encontrada")
+        }
+        if (!destination) {
+            throw new Error("Cuenta destino no encontrada")
+        }
+
+        // verificar estados
+        if (source.estado !== 'ACTIVE') {
+            throw new Error("Cuenta origen no está activa")
+        }
+        if (destination.estado !== 'ACTIVE') {
+            throw new Error("Cuenta destino no está activa")
         }
 
         if (source.saldo < amount) {
-            throw new Error("Insufficient funds")
+            throw new Error("Fondos insuficientes en la cuenta origen")
         }
 
         // Actualizar balances
+        const sourceBefore = source.saldo
+        const destinationBefore = destination.saldo
+
         source.saldo -= amount
         destination.saldo += amount
+
+        const sourceAfter = source.saldo
+        const destinationAfter = destination.saldo
 
         await source.save({ session })
         await destination.save({ session })
@@ -40,7 +64,9 @@ export const perfomTransfer = async (dataTransfer, userId) => {
             executedBy: userId,
             description: "Transferencia enviada",
             channel: "INTERNAL_TRANSFER",
-            session
+            session,
+            balanceBefore: sourceBefore,
+            balanceAfter: sourceAfter
         })
 
         await registrarMovimiento({
@@ -51,7 +77,9 @@ export const perfomTransfer = async (dataTransfer, userId) => {
             executedBy: userId,
             description: "Transferencia recibida",
             channel: "INTERNAL_TRANSFER",
-            session
+            session,
+            balanceBefore: destinationBefore,
+            balanceAfter: destinationAfter
         })
 
         await session.commitTransaction()

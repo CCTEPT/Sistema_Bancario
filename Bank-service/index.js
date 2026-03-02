@@ -12,7 +12,7 @@ import jwt from '@fastify/jwt'
 import { connectDB } from './configs/db.js'
 import accountRoutes from './src/routes/account.routes.js'
 import movementRoutes from './src/routes/movement.routes.js'
-import transferRoutes from './src/routes/transfer.routes.js'
+// transferRoutes ya no se usa: la operación de transferencia forma parte de movements
 import checkRoutes from './src/routes/check.routes.js'
 import authorizeRole from "./src/middlewares/role.middleware.js"
 
@@ -60,7 +60,7 @@ app.decorate("authorizeRole", authorizeRole)
 // Es buena práctica usar await en el registro si usas top-level await
 await app.register(accountRoutes, { prefix: '/api/accounts' })
 await app.register(movementRoutes, { prefix: '/api/movements' })
-await app.register(transferRoutes, { prefix: '/api/transferencias' })
+// la ruta de transferencias individual fue eliminada, usa POST /api/movements/transfer
 await app.register(checkRoutes, { prefix: '/api/checks' })
 
 const start = async () => {
