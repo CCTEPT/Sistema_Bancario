@@ -13,8 +13,8 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-        var issuer = jwtSettings["Issuer"] ?? "KinalSports";
-        var audience = jwtSettings["Audience"] ?? "KinalSports";
+        var issuer = jwtSettings["Issuer"] ?? "NovaBank";
+        var audience = jwtSettings["Audience"] ?? "NovaBank";
         var expiryInMinutes = int.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));

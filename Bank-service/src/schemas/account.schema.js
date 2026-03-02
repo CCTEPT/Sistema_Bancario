@@ -1,7 +1,7 @@
- export const createAccountSchema = {
+export const createAccountSchema = {
   body: {
     type: 'object',
-    required: ['tipoCuenta', 'divisa'],
+    required: ['tipoCuenta'],
     properties: {
       tipoCuenta: {
         type: 'string',
@@ -9,7 +9,8 @@
       },
       divisa: {
         type: 'string',
-        enum: ['GTQ', 'USD', 'EUR']
+        enum: ['GTQ', 'USD', 'EUR'],
+        default: 'GTQ'
       }
     }
   }

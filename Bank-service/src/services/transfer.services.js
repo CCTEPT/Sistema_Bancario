@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import Account from "../models/Account.js"
+import Account from "../models/account.model.js"
 import { registrarMovimiento } from "./movement.service.js"
 
 export const perfomTransfer = async (dataTransfer, userId) => {

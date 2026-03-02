@@ -57,21 +57,29 @@ const movementSchema = new mongoose.Schema(
 
         date: {
             type: Date,
-            default: Date.now,
-            index: true
+            default: Date.now
         },
 
         idempotencyKey: {
             type: String,
             unique: true,
             sparse: true
+        },
+        balanceBefore: {
+            type: Number,
+            required: true
+        },
+
+        balanceAfter: {
+            type: Number,
+            required: true
         }
     },
     { timestamps: true }
 )
 
-movementSchema.index({ accountId: 1 });
+
 movementSchema.index({ date: -1 });
-movementSchema.index({ movementType: 1 });
+
 
 export default mongoose.model('Movement', movementSchema)

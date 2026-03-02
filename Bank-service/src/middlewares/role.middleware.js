@@ -1,11 +1,23 @@
-export function authorizeRoles(...allowedRoles) {
-    return async function (request, reply) {
-        const userRole = request.user.role
+export default function authorizeRole(roles = []) {
 
-        if (!allowedRoles.includes(userRole)) {
-        return reply.code(403).send({
-            message: 'No autorizado'
-        })
+    return async function (request, reply) {
+
+        if (!request.user) {
+
+            return reply.code(401).send({
+                message: "No autenticado"
+            })
+
         }
+
+        if (!roles.includes(request.user.role)) {
+
+            return reply.code(403).send({
+                message: "No autorizado"
+            })
+
+        }
+
     }
+
 }
