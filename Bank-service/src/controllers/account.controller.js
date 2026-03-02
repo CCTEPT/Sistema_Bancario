@@ -1,30 +1,13 @@
-// 1. Cambiamos require por import para ser consistentes con ESM
 import authClient from "../services/authServiceClient.service.js";
 import accountService from "../services/account.service.js";
 
 async function createAccount(request, reply) {
     try {
-        // extrae id directamente del payload del JWT (sub viene de AuthService)
-        const idUsuario = request.user?.sub;
 
-        if (!idUsuario) {
-            // si por alguna razón no tiene sub, intenta con el token y el cliente
-            const authHeader = request.headers.authorization || "";
-            const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-            if (!token) {
-                return reply.code(401).send({ message: "Token no proporcionado" });
-            }
-
-            const user = await authClient.getProfile(token);
-            if (!user || !user.id) {
-                return reply.code(404).send({ message: "Usuario no encontrado" });
-            }
-            request.user = { sub: user.id, ...user };
-        }
+        const idUsuario = request.user.sub;
 
         const account = await accountService.createAccount({
-            idUsuario: request.user.sub,
+            idUsuario,
             tipoCuenta: request.body.tipoCuenta,
             divisa: request.body.divisa || "GTQ"
         });
@@ -33,14 +16,59 @@ async function createAccount(request, reply) {
             message: "Cuenta creada correctamente",
             account
         });
+
     } catch (error) {
-        return reply.code(500).send({ message: error.message });
+        return reply.code(500).send({
+            message: error.message
+        });
     }
 }
 
+async function getAccounts(request, reply) {
+    return {
+        message: "Listado de Cuentas",
+        accounts: await accountService.getAccounts()
+    }
+}
+
+
+
+const getAccountById = async (request, reply) => {
+    try {
+
+        const { idCuenta } = request.params;
+
+        const account = await accountService.getAccountById(idCuenta);
+
+        // 🔐 Validar propiedad de la cuenta
+        if (
+            request.user.role === "USER_ROLE" &&
+            account.idUsuario !== request.user.sub
+        ) {
+            return reply.code(403).send({
+                error: "No tienes permiso para ver esta cuenta"
+            });
+        }
+
+        return reply.send({
+            message: "Detalle de cuenta",
+            account
+        });
+
+    } catch (error) {
+
+        return reply.code(404).send({
+            error: error.message
+        });
+
+    }
+};
+
 // 2. Creamos el objeto que tus rutas están esperando
 const accountController = {
-    createAccount
+    createAccount,
+    getAccounts,
+    getAccountById
 };
 
 // 3. Exportamos ese objeto por defecto
