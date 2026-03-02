@@ -1,32 +1,278 @@
-# 🔐 Auth Service – NovaBank
+# 🏦 Sistema Bancario
 
-> **Nota**: Este proyecto fue desarrollado con fines didácticos como parte del curso de arquitectura de microservicios **IN6AM**. Es el componente central de seguridad para el ecosistema bancario **NovaBank**.
-
-## 📝 Descripción
-
-Microservicio de autenticación y gestión de usuarios para la plataforma **NovaBank**. Este servicio centraliza el ciclo de vida de la identidad: registro, inicio de sesión, verificación de correo electrónico, gestión de perfiles y administración de roles (RBAC).
-
-Implementa **Clean Architecture** (Arquitectura en capas) para asegurar que la lógica de negocio sea independiente de la base de datos y de los servicios externos.
+Proyecto compuesto por varios micro‑servicios que conforman una plataforma bancaria simple.  
+Cada servicio está desarrollado con tecnologías modernas (Node/Express, Fastify, .NET Core) y se comunican mediante JWT.
 
 ---
 
-## 🏗 Arquitectura
-
-Este proyecto sigue una arquitectura en capas (Clean Architecture), separando responsabilidades en **API, Application, Domain y Persistence**.
-
----
-
-## 📁 Raíz del Proyecto
+## 📁 Estructura general
 
 ```
-.
-│   .gitignore
-│   LICENSE
-│   README.md
+/
+├─ Authentication-service/      ← .NET Core API para auth & users
+├─ Bank-service/                ← Node.js / Fastify para cuentas, movimientos, cheques
+├─ FinancialConfig-service/     ← Node.js / Fastify para tipos de cuenta, divisas, tasas
+└─ pg/                          ← docker-compose con PostgreSQL
+```
+
+---
+
+## 🔒 Authentication‑service
+
+**Tecnología:** ASP.NET Core  
+**Objetivo:** gestionar usuarios, login, roles y emisión de tokens JWT.
+
+### Endpoints principales
+- `POST /api/auth/login` → recibe credenciales y devuelve JWT
+- `POST /api/auth/register` → registrar nuevo usuario
+- `GET /api/users` → listado protegido (requiere JWT)
+- `PUT /api/users/{id}/role` → cambiar rol
+
+El token generado se utiliza como `Bearer` en los demás servicios.
+
+### 🏗 Arquitectura interna (Clean Architecture)
+
+Este servicio sigue una arquitectura en capas (API, Application, Domain, Persistence). A continuación se muestra la estructura principal y algunas clases clave.
+
+#### 📁 Raíz del proyecto
+
+```
+Authentication-service/auth-service/src/
+```
+
+#### 🌐 AuthService.Api (Capa de Presentación)
+
+Contiene los controladores, middlewares y configuración del servidor.
+
+```
+AuthService.Api/
+│   Program.cs
+│   appsettings.json
+│   appsettings.Development.json
 │
-├── Authentication-service/
-├── pg/
+├── Controllers/
+│   ├── AuthController.cs
+│   ├── UserController.cs
+│   └── HealthController.cs
+│
+├── Middlewares/
+│   └── GlobalExceptionMiddleware.cs
+│
+├── Extensions/
+│   ├── AuthenticationExtensions.cs
+│   ├── SecurityExtensions.cs
+│   ├── RateLimitingExtensions.cs
+│   └── ServiceCollectionExtensions.cs
+│
+├── Models/
+│   ├── ErrorResponse.cs
+│   └── FormFileAdapter.cs
+│
+└── ModelBinders/
+    └── FileDataModelBinder.cs
 ```
+
+**Clases importantes**
+- `Program.cs` → Configuración principal del servidor
+- `AuthController` → Login, registro y autenticación
+- `UserController` → Gestión de usuarios
+- `GlobalExceptionMiddleware` → Manejo global de errores
+
+#### 🧠 AuthService.Application (Lógica de Negocio)
+
+Aquí vive la lógica real del sistema.
+
+```
+AuthService.Application/
+│
+├── DTOs/
+├── Services/
+├── Interfaces/
+├── Validators/
+└── Exceptions/
+```
+
+**Servicios destacados**
+- `AuthService`, `UserManagementService`, `JwtTokenService`, `PasswordHashService`, `EmailService`, `CloudinaryService`
+
+**Interfaces clave**
+`IAuthService`, `IUserManagementService`, `IJwtTokenService`, `IPasswordHashService`, `IEmailService`, `ICloudinaryService`
+
+#### 🧱 AuthService.Domain (Reglas del Dominio)
+
+Contiene entidades y contratos del sistema.
+
+```
+AuthService.Domain/
+│
+├── Entities/
+│   ├── User.cs
+│   ├── Role.cs
+│   ├── UserProfile.cs
+│   ├── UserEmail.cs
+│   ├── UserRole.cs
+│   └── UserPasswordReset.cs
+│
+├── Interfaces/
+│   ├── IUserRepository.cs
+│   └── IRoleRepository.cs
+│
+├── Enums/
+│   └── UserRole.cs
+│
+└── Constants/
+    └── RoleConstants.cs
+```
+
+#### 🗄 AuthService.Persistence (Infraestructura y BD)
+
+Implementa acceso a datos con Entity Framework Core.
+
+```
+AuthService.Persistence/
+│
+├── Data/
+│   ├── ApplicationDbContext.cs
+│   └── DataSeeder.cs
+│
+├── Repositories/
+│   ├── UserRepository.cs
+│   └── RoleRepository.cs
+│
+└── Migrations/
+```
+
+**Clases importantes**
+- `ApplicationDbContext` → Configuración de EF Core
+- `DataSeeder` → Carga inicial (Admin por defecto)
+- `UserRepository`, `RoleRepository`
+
+---
+
+## 💳 Bank‑service
+
+**Tecnología:** Node.js + Fastify  
+Provee:
+
+- CRUD de cuentas bancarias
+- Depósitos, retiros, transferencias
+- Generación de cheques
+
+### Rutas
+
+- `POST /api/accounts` – crear cuenta (JWT)
+- `GET /api/accounts` – listar cuentas
+- `POST /api/movements/deposit` – depositar
+- `POST /api/movements/withdraw` – retirar
+- `POST /api/movements/transfer` – transferir
+- etc.
+
+Utiliza el servicio de `FinancialConfig` para validar tipos de cuenta y tarifas, y el service de auth para validar JWT/roles.
+
+---
+
+## 💱 FinancialConfig‑service
+
+**Tecnología:** Node.js + Fastify  
+Administra la configuración financiera:
+
+- Tipos de cuenta (`/api/account-types`)
+- Monedas (`/api/currencies`)
+- Tasas de cambio (`/api/exchange/*`)
+
+Endpoints protegidos con JWT para creación/actualización; el resto es público.
+
+---
+
+## ⚙️ Configuración común
+
+Cada servicio carga variables desde `.env`. Ejemplos:
+
+```ini
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/financialconfig
+JWT_SECRET=unsecreto
+DB_CONNECTION=...
+```
+
+Asegúrate de tener los servicios de base de datos correspondientes (MongoDB, SQL Server, PostgreSQL).
+
+---
+
+## 🚀 Levantar los servicios
+
+1. **Autenticación**
+
+   ```bash
+   cd Authentication-service/auth-service
+   dotnet run --project src/AuthService.Api/AuthService.Api.csproj
+   ```
+
+2. **Bank-service**
+
+   ```bash
+   cd Bank-service
+   pnpm install
+   pnpm run dev
+   ```
+
+3. **FinancialConfig-service**
+
+   ```bash
+   cd FinancialConfig-service
+   pnpm install
+   pnpm run dev
+   ```
+
+4. (Opcional) Iniciar la base de datos con Docker:
+
+   ```bash
+   cd pg
+   docker-compose up -d
+   ```
+
+---
+
+## 📄 Documentación Swagger
+
+Todos los servicios Node exponen Swagger UI:
+
+- **Bank-service:** `http://localhost:3001/docs` (o puerto configurado)
+- **FinancialConfig-service:** `http://localhost:3000/docs`
+
+Para usar rutas protegidas haz clic en **Authorize** y provee el JWT en formato:
+
+```
+Bearer <tu_token>
+```
+
+---
+
+## 🛠 Desarrollo & pruebas
+
+- Se usan **pnpm** para dependencias en los servicios Node.
+- Los esquemas de validación están en `src/schemas`; los servicios en `src/services`.
+- Puedes usar `AuthService.Api.http` dentro del proyecto de auth para probar con VS Code REST Client.
+
+---
+
+## 📌 Tips
+
+- El token JWT se obtiene desde `Authentication-service`; copia el valor y úsalo en los demás servicios.
+- Las rutas de exchange permiten calcular conversiones y registrar tasas.
+- Las colecciones de Mongo se llaman `accounttypes`, `currencies`, `exchangerates` (si corres FinancialConfig).
+
+---
+
+## 📚 Referencias
+
+- Fastify + Swagger: configuración ya incluida en cada proyecto Node.
+- MongoDB con Mongoose en cada servicio Node.
+- JWT con `@fastify/jwt` y middleware propio `auth.middleware.js`.
+
+---
+
+¡Listo! este README ofrece una visión global agradable y sirve como guía de uso para cualquiera que clona el repo. 😄
 
 - `.gitignore` → Archivos ignorados por Git  
 - `LICENSE` → Licencia MIT  
