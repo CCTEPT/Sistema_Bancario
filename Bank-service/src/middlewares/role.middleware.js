@@ -1,23 +1,27 @@
-export default function authorizeRole(roles = []) {
+export default function authorizeRole(...allowedRoles) {
 
-    return async function (request, reply) {
+  return async function (request, reply) {
 
-        if (!request.user) {
+    try {
 
-            return reply.code(401).send({
-                message: "No autenticado"
-            })
+      await request.jwtVerify()
 
-        }
+      const userRole = request.user.role
 
-        if (!roles.includes(request.user.role)) {
+      if (!allowedRoles.includes(userRole)) {
+        return reply.code(403).send({
+          error: "No tienes permisos para realizar esta acción"
+        })
+      }
 
-            return reply.code(403).send({
-                message: "No autorizado"
-            })
+    } catch (err) {
 
-        }
+      return reply.code(401).send({
+        error: "No autorizado"
+      })
 
     }
+
+  }
 
 }

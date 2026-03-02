@@ -97,6 +97,10 @@ class AccountService {
         return account;
     }
 
+    async getAccounts() {
+        return await Account.find({ estado: "ACTIVE" });
+    }
+
 }
 
 export default new AccountService();
