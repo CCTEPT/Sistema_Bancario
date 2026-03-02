@@ -37,8 +37,8 @@ const accountSchema = new mongoose.Schema({
 
   estado: {
     type: String,
-    enum: ['activa', 'inactiva'],
-    default: 'activa'
+    enum: ['ACTIVE', 'INACTIVE'],
+    default: 'ACTIVE'
   },
 
   fechaCreacion: {
