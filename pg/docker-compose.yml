@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: novabank
     ports: 
-      - "5435:5432"
+      - "5500:5432"
     volumes:
       - postgres_data:/lib/postgresql/data
     restart: unless-stopped
