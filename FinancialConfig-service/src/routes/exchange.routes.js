@@ -4,7 +4,12 @@ import {
   convert,
   listRates
 } from '../controllers/exchange.controller.js'
-import { rateSchema, convertSchema } from '../schemas/exchange.schema.js'
+import {
+  rateSchema,
+  convertSchema,
+  getRateSchema,
+  listRatesSchema
+} from '../schemas/exchange.schema.js'
 import authMiddleware from '../middlewares/auth.middleware.js'
 
 export default async function exchangeRoutes(fastify, options) {
@@ -28,7 +33,8 @@ export default async function exchangeRoutes(fastify, options) {
     '/rate/:from/:to',
     {
       schema: {
-        tags: ['Exchange']
+        tags: ['Exchange'],
+        ...getRateSchema
       }
     },
     getRate
@@ -51,7 +57,8 @@ export default async function exchangeRoutes(fastify, options) {
     '/rates',
     {
       schema: {
-        tags: ['Exchange']
+        tags: ['Exchange'],
+        ...listRatesSchema
       }
     },
     listRates

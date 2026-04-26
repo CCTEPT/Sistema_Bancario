@@ -35,7 +35,58 @@ public static class ServiceCollectionsExtensions
     public  static IServiceCollection AddApiDocumentation(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwaggerGen(config =>
+        {
+            // Información general del API
+            config.SwaggerDoc("v1", new()
+            {
+                Title = "NovaBank Authentication API",
+                Version = "v1.0.0",
+                Description = "API de autenticación y gestión de usuarios para el Sistema Bancario NovaBank. Incluye registro, login, verificación de email y gestión de roles.",
+                Contact = new()
+                {
+                    Name = "NovaBank Support",
+                    Email = "soporte@novabank.com"
+                },
+                License = new()
+                {
+                    Name = "ISC License",
+                    Url = new Uri("https://opensource.org/licenses/ISC")
+                }
+            });
+
+            // Configurar seguridad JWT
+            config.AddSecurityDefinition("Bearer", new()
+            {
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Token JWT requerido para acceder a endpoints protegidos. Formato: Bearer {token}"
+            });
+
+            config.AddSecurityRequirement(new()
+            {
+                {
+                    new()
+                    {
+                        Reference = new()
+                        {
+                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            });
+
+            // Incluir comentarios XML
+            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                config.IncludeXmlComments(xmlPath);
+            }
+        });
         return services;
     }
 }

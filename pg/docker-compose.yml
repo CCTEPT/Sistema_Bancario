@@ -5,11 +5,11 @@ services:
     image: postgres:13
     container_name: novabank_postgres
     environment:
-      POSTGRES_USER: CCTEPT
+      POSTGRES_USER: CCCTP
       POSTGRES_PASSWORD: admin
-      POSTRGRES_DB: novabank
+      POSTGRES_DB: novabank
     ports: 
-      - "5435:5432"
+      - "5500:5432"
     volumes:
       - postgres_data:/lib/postgresql/data
     restart: unless-stopped

@@ -1,6 +1,6 @@
 import accountController from "../controllers/account.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
-import { createAccountSchema } from "../schemas/account.schema.js";
+import { createAccountSchema, getAccountsSchema, getAccountByIdSchema } from "../schemas/account.schema.js";
 
 async function routes(fastify, options) {
 
@@ -22,6 +22,7 @@ async function routes(fastify, options) {
         {
             preHandler: fastify.authorizeRole("EMPLOYEE_ROLE", "ADMIN_ROLE"),
             schema: {
+                ...getAccountsSchema,
                 tags: ["Accounts"],
                 security: [{ bearerAuth: [] }]
             }
@@ -35,6 +36,7 @@ async function routes(fastify, options) {
         {
             preHandler: fastify.authorizeRole("USER_ROLE", "ADMIN_ROLE"),
             schema: {
+                ...getAccountByIdSchema,
                 tags: ["Accounts"],
                 security: [{ bearerAuth: [] }]
             }

@@ -5,7 +5,13 @@ import {
   updateAccountType,
   deleteAccountType
 } from '../controllers/accountType.controller.js'
-import { accountTypeSchema } from '../schemas/accountType.schema.js'
+import {
+  accountTypeSchema,
+  listAccountTypesSchema,
+  getAccountTypeSchema,
+  updateAccountTypeSchema,
+  deleteAccountTypeSchema
+} from '../schemas/accountType.schema.js'
 import authMiddleware from '../middlewares/auth.middleware.js'
 
 export default async function accountTypeRoutes(fastify, options) {
@@ -27,7 +33,8 @@ export default async function accountTypeRoutes(fastify, options) {
     '/',
     {
       schema: {
-        tags: ['Account Types']
+        tags: ['Account Types'],
+        ...listAccountTypesSchema
       }
     },
     listAccountTypes
@@ -37,7 +44,8 @@ export default async function accountTypeRoutes(fastify, options) {
     '/:id',
     {
       schema: {
-        tags: ['Account Types']
+        tags: ['Account Types'],
+        ...getAccountTypeSchema
       }
     },
     getAccountType
@@ -50,7 +58,7 @@ export default async function accountTypeRoutes(fastify, options) {
       schema: {
         tags: ['Account Types'],
         security: [{ bearerAuth: [] }],
-        ...accountTypeSchema
+        ...updateAccountTypeSchema
       }
     },
     updateAccountType
@@ -62,7 +70,8 @@ export default async function accountTypeRoutes(fastify, options) {
       preHandler: authMiddleware,
       schema: {
         tags: ['Account Types'],
-        security: [{ bearerAuth: [] }]
+        security: [{ bearerAuth: [] }],
+        ...deleteAccountTypeSchema
       }
     },
     deleteAccountType
