@@ -5,7 +5,13 @@ import {
   updateCurrency,
   deleteCurrency
 } from '../controllers/currency.controller.js'
-import { currencySchema } from '../schemas/currency.schema.js'
+import {
+  currencySchema,
+  listCurrenciesSchema,
+  getCurrencySchema,
+  updateCurrencySchema,
+  deleteCurrencySchema
+} from '../schemas/currency.schema.js'
 import authMiddleware from '../middlewares/auth.middleware.js'
 
 export default async function currencyRoutes(fastify, options) {
@@ -27,7 +33,8 @@ export default async function currencyRoutes(fastify, options) {
     '/',
     {
       schema: {
-        tags: ['Currencies']
+        tags: ['Currencies'],
+        ...listCurrenciesSchema
       }
     },
     listCurrencies
@@ -37,7 +44,8 @@ export default async function currencyRoutes(fastify, options) {
     '/:code',
     {
       schema: {
-        tags: ['Currencies']
+        tags: ['Currencies'],
+        ...getCurrencySchema
       }
     },
     getCurrency
@@ -50,7 +58,7 @@ export default async function currencyRoutes(fastify, options) {
       schema: {
         tags: ['Currencies'],
         security: [{ bearerAuth: [] }],
-        ...currencySchema
+        ...updateCurrencySchema
       }
     },
     updateCurrency
@@ -62,7 +70,8 @@ export default async function currencyRoutes(fastify, options) {
       preHandler: authMiddleware,
       schema: {
         tags: ['Currencies'],
-        security: [{ bearerAuth: [] }]
+        security: [{ bearerAuth: [] }],
+        ...deleteCurrencySchema
       }
     },
     deleteCurrency

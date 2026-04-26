@@ -5,7 +5,7 @@ services:
     image: postgres:13
     container_name: novabank_postgres
     environment:
-      POSTGRES_USER: CCTEPT
+      POSTGRES_USER: CCCTP
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: novabank
     ports: 
