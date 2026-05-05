@@ -2,10 +2,11 @@
 
 @theme {
   --color-main-blue: #298f5f;
+  --color-main-blue-dark: #20764e;
+  --color-main-blue-light: #e8f6ef;
 }
 
 :root {
-
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -31,5 +32,5 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.15s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
