@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { login as loginReq } from '../../../shared/apis';
-import { showError } from '../../../shared/utils/toast.js';
+//import { showError } from '../../../shared/utils/toast.js';
 
 //gestionar la persistencia del estado global de la app
 export const useAuthStore = create(
@@ -12,6 +12,7 @@ export const useAuthStore = create(
             token: null,
             refreshToken: null,
             expiresAt: null,
+            role: null,
             loading: false, //feedback de carga para el usuario, indicar que esta realizando una accion - se oculta el spinner
             error: null,
             isLoadingAuth: true,
@@ -19,26 +20,15 @@ export const useAuthStore = create(
             checkAuth: async () => {
                 const token = get().token;
                 const role = get().user?.role; // ? forzar a intentar desestructurar el role, si no existe, devuelve undefined
-                const isAdmin = role === 'ADMIN_ROLE';
 
-                if (token && !isAdmin) {
                     set({
-                        user: null,
-                        token: null,
-                        refreshToken: null,
-                        expiresAt: null,
-                        isLoadingAuth: true,
-                        isAuthenticated: false,
-                        error: 'No tienes permisos para acceder a esta app :(',
+                        isLoadingAuth: false,
+                        isAuthenticated: Boolean(token),
+                        role,
                     });
                     return; //que se interrumpa el flujo
-                }
+                },
 
-                set({
-                    isLoadingAuth: false,
-                    isAuthenticated: Boolean(token) && isAdmin
-                })
-            },
             //funcion para cerrar sesion
             logout: () => {
                 set({
@@ -58,19 +48,17 @@ export const useAuthStore = create(
 
                     const role = data?.userDetails?.role;
                     if (role !== 'ADMIN_ROLE') {
-                        const message = 'No tienes permisos para acceder a esta app SORRRY';
 
                         set({
-                            user: null,
-                            token: null,
-                            refreshToken: null,
-                            expiresAt: null,
-                            isLoadingAuth: true,
-                            isAuthenticated: false,
-                            error: message,
+                            user: data.userDetails,
+                            token: data.accessToken,
+                            refreshToken: data.refreshToken,
+                            expiresAt: data.expiresIn,
+                            isLoadingAuth: false,
+                            isAuthenticated: true,
+                            role: data.userDetails.role,
                         });
-                        showError(message);
-                        return { success: false, error: message };
+                        
                     }
 
                     set({

@@ -1,13 +1,37 @@
 import { useForm } from 'react-hook-form'
-//import { useAuthStore } from '../store/authStore.js'
-export const LoginForm = ({ onForgot }) => {
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore.js'
+import toast from 'react-hot-toast'
+
+export const LoginForm = ({ onForgot, onRegister }) => {
+  
+  const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+  const loading = useAuthStore((state) => state.loading);
+  const error = useAuthStore((state) => state.error);
+
   const {
     register,
+    handleSubmit,
     formState: { errors }
   } = useForm()
 
+  const onSubmit = async (data) => {
+    const res = await login(data);
+    if(res.success){
+      const role = useAuthStore.getState().user?.role;
+      if(role === "ADMIN_ROLE"){
+          navigate('/dashboard');
+      }else{
+        navigate('/users')
+      }
+      toast.success("Bienvenido de nuevo!", {duration: 3000});
+    }
+    console.log(res);
+  }
+
   return (
-    <form className='space-y-5 animate-fadeIn'>
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-5 animate-fadeIn'>
       <div>
         <label
           htmlFor='emailOrUsername'
@@ -70,8 +94,19 @@ export const LoginForm = ({ onForgot }) => {
             {errors.password.message}
           </p>
         )}
-      </div>
 
+        <p className='text-right text-sm text-gray-500'>
+        <button
+          type='button'
+          onClick={onForgot}
+          className='font-medium text-main-blue hover:underline hover:cursor-pointer'
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+      </p>
+      </div>
+      
+        {error && <p className='text-red-750 text-sm text-center'>{error}</p>}
       <button
         type='submit'
         className='
@@ -80,17 +115,19 @@ export const LoginForm = ({ onForgot }) => {
           hover:-translate-y-0.5 hover:bg-main-blue-dark hover:shadow-lg
           active:translate-y-0
         '
+        disabled={loading}
       >
-        Iniciar Sesión
+        {loading ? "Iniciado sesión..." : "Iniciar sesión"}
       </button>
+
 
       <p className='text-center text-sm text-gray-500'>
         <button
           type='button'
-          onClick={onForgot}
+          onClick={onRegister}
           className='font-medium text-main-blue hover:underline hover:cursor-pointer'
         >
-          ¿Olvidaste tu contraseña?
+          Aún no tienes una cuenta? Registrate aquí
         </button>
       </p>
     </form>
