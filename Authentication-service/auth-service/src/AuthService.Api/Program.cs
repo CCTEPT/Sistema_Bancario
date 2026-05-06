@@ -40,6 +40,7 @@ builder.Services.AddRateLimitingPolicies();
 builder.Services.AddSecurityPolicies(builder.Configuration);
 builder.Services.AddSecurityOptions();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
