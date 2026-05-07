@@ -49,7 +49,7 @@ export const AuthPage = () => {
 
                 {isForgot ? (
                     <ForgotPass
-                        onSwitch={() => {
+                        onChange={() => {
                             setIsForgot(false)
                         }}
                     />
