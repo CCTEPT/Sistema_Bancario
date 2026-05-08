@@ -8,7 +8,7 @@ export const App = () => {
 
   useEffect(() =>{
     checkAuth();
-  }), [checkAuth]
+  }, [checkAuth]);
   return (
     <>
     <Toaster
@@ -19,7 +19,7 @@ export const App = () => {
           fontWeight: '500',
           fontSize: '1rem',
           borderRadius: "8px"
-        }
+        },
       }}
     />
     <AppRoutes />

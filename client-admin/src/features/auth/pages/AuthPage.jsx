@@ -1,10 +1,12 @@
 import { LoginForm } from "../components/LoginForm.jsx"
 import { ForgotPass } from "../components/ForgotPass.jsx"
+import { RegisterForm } from "../components/RegisterForm.jsx"
 import { useState } from "react"
 
 export const AuthPage = () => {
     const [isForgot, setIsForgot] = useState(false)
-
+    const [isRegister, setIsRegister] = useState(false)
+    const [preview, setPreview] = useState(null);
     return (
         <div className='relative min-h-screen flex items-center justify-center overflow-hidden bg-black p-4'>
 
@@ -16,38 +18,55 @@ export const AuthPage = () => {
 
             <div className='relative w-full max-w-xl rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-2xl md:p-10'>
 
-                <div className='flex justify-center mb-6'>
-                    <div className='rounded-3xl border border-white/20 bg-white/10 p-3 shadow-lg backdrop-blur-md'>
-                        <img
-                            src='/src/assets/img/logoBanco.png'
-                            alt='NovaBank Logo'
-                            className='h-20 w-auto rounded-2xl'
-                        />
+                <div className="flex justify-center mb-6">
+                    <div className="w-24 h-24 rounded-full border-4 border-main-blue bg-[#0d1f35]/70 shadow-lg overflow-hidden flex items-center justify-center">
+                        {isRegister && preview ? (
+                            <img src={preview} alt="Foto Perfil" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                            <img
+                                src="/src/assets/img/logoBanco.png"
+                                alt="NovaBank Logo"
+                                className="w-16 h-16 object-contain"
+                            />
+                        )}
                     </div>
                 </div>
 
+
                 <div className='text-center mb-6'>
                     <h1 className='text-2xl lg:text-3xl font-bold text-white mb-2 tracking-tight'>
-                        {isForgot ? 'Recuperar Contraseña' : 'Bienvenido de nuevo'}
+                        {isForgot ? 'Recuperar Contraseña' : isRegister ? 'Crear cuenta' : 'Bienvenido de nuevo'}
                     </h1>
 
                     <p className='text-white/60 text-base max-w-md mx-auto'>
                         {isForgot
                             ? 'Ingresa tu correo para recuperar tu contraseña'
-                            : 'Ingresa a tu cuenta de administrador'}
+                            : isRegister
+                                ? ' Completa los datos para poder registrarte'
+                                : 'Ingresa a tu cuenta de administrador'}
                     </p>
                 </div>
 
                 {isForgot ? (
                     <ForgotPass
-                        onSwitch={() => {
+                        onChange={() => {
                             setIsForgot(false)
                         }}
+                    />
+                ) : isRegister ? (
+                    <RegisterForm
+                        onSwitch={() => {
+                            setIsRegister(false)
+                        }}
+                        onPreview={setPreview}
                     />
                 ) : (
                     <LoginForm
                         onForgot={() => {
                             setIsForgot(true)
+                        }}
+                        onRegister={() => {
+                            setIsRegister(true)
                         }}
                     />
                 )}

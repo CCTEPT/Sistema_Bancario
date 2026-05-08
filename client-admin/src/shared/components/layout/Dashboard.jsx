@@ -1,9 +1,9 @@
-import { Navbar } from "./Navbar.jsx";
-import { Sidebar } from "./Sidebar.jsx";
+import { Navbar } from "./Navbar";
+import { Sidebar } from "./Sidebar";
 
 export const Dashboard = ({user, onLogout, children }) => {
   return (
-    <div className='min-h-screen bg-gray-50 flex flex-col'>
+    <div className='min-h-screen bg-gray-500 flex flex-col'>
       <Navbar user={user} onLogout={onLogout} />
       <div className='flex flex-1'>
         <Sidebar />
