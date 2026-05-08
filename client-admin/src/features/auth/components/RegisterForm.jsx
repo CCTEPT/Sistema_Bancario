@@ -3,7 +3,7 @@ import { Spinner } from "../../../features/auth/components/Spinner.jsx"
 //import { useNavigate } from 'react-router-dom'; 
 import { createUser } from '../../../shared/apis/auth.js';
 
-export const RegisterForm = ({ loading, error, onSwitch }) => {
+export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
     ///const navigate = useNavigate();
 
@@ -16,11 +16,11 @@ export const RegisterForm = ({ loading, error, onSwitch }) => {
         formData.append('Password', values.password);
         formData.append('Phone', values.phone);
         if (values.profilePicture?.[0]) {
-        formData.append('ProfilePicture', values.profilePicture[0]);
+            formData.append('ProfilePicture', values.profilePicture[0]);
         }
-        
+
         const ok = await createUser(formData);
-        if(ok){
+        if (ok) {
             onSwitch();
             reset();
         }
@@ -28,130 +28,123 @@ export const RegisterForm = ({ loading, error, onSwitch }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit(submit)} className="space-y-5 animate-fadeIn">
+        <form onSubmit={handleSubmit(submit)} className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
 
             <div>
-                <label htmlFor="name"className="block text-sm font-semibold text-gray-700 mb-1.5">Nombre</label>
+                <label htmlFor="name" className="block text-sm font-medium text-white mb-2">Nombre</label>
                 <input
                     {...register("name", { required: "Este campo es requerido" })}
                     type="text"
                     id="name"
                     placeholder="Nombre"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
                         ${errors.name ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.name && <p className="text-red-600 text-xs mt-1.5">{errors.name.message}</p>}
+                {errors.name && <p className="text-red-400 text-xs mt-1.5">{errors.name.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="surname"className="block text-sm font-semibold text-gray-700 mb-1.5">Apellido</label>
+                <label htmlFor="surname" className="block text-sm font-medium text-white mb-2">Apellido</label>
                 <input
                     {...register("surname", { required: "Este campo es requerido" })}
                     type="text"
                     id="surname"
                     placeholder="Apellido"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
                         ${errors.surname ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.surname && <p className="text-red-600 text-xs mt-1.5">{errors.surname.message}</p>}
+                {errors.surname && <p className="text-red-400 text-xs mt-1.5">{errors.surname.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="username"className="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
+                <label htmlFor="username" className="block text-sm font-medium text-white mb-2">Username</label>
                 <input
                     {...register("username", { required: "Este campo es requerido" })}
                     type="text"
                     id="username"
                     placeholder="Nombre de Usuario"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
                         ${errors.username ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.username && <p className="text-red-600 text-xs mt-1.5">{errors.username.message}</p>}
+                {errors.username && <p className="text-red-400 text-xs mt-1.5">{errors.username.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="email"className="block text-sm font-semibold text-gray-700 mb-1.5">Correo Electrónico</label>
+                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Correo Electrónico</label>
                 <input
                     {...register("email", { required: "Este campo es requerido" })}
                     type="email"
                     id="email"
                     placeholder="correo@example.com"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
                         ${errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.email && <p className="text-red-600 text-xs mt-1.5">{errors.email.message}</p>}
+                {errors.email && <p className="text-red-400 text-xs mt-1.5">{errors.email.message}</p>}
             </div>
 
 
             <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1.5">Contraseña</label>
+                <label htmlFor="password" className="block text-sm font-medium text-white mb-2">Contraseña</label>
                 <input
                     {...register("password", { required: "Este campo es requerido" })}
                     type="password"
                     id="password"
                     placeholder="••••••••"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
                         ${errors.password ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.password && <p className="text-red-600 text-xs mt-1.5">{errors.password.message}</p>}
+                {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
             </div>
 
             <div>
-                <label htmlFor="phone"className="block text-sm font-semibold text-gray-700 mb-1.5">Número de Teléfono</label>
+                <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">Número de Teléfono</label>
                 <input
                     {...register("phone", { required: "Este campo es requerido" })}
                     type="text"
                     id="phone"
                     placeholder="12345678"
                     className={`
-                        w-full rounded-xl border bg-white px-4 py-3 text-sm text-gray-800
-                        placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-                        focus:border-main-blue focus:ring-4 focus:ring-main-blue/15
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
                         ${errors.phone ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
-                {errors.phone && <p className="text-red-600 text-xs mt-1.5">{errors.phone.message}</p>}
+                {errors.phone && <p className="text-red-400 text-xs mt-1.5">{errors.phone.message}</p>}
             </div>
 
             {/* Imagen */}
             <div className='flex flex-col md:col-span-2'>
-                <label className='text-sm font-semibold text-gray-700 mb-1'>Foto de perfill</label>
+                <label className='block text-sm font-medium text-white mb-2'>Foto de perfill</label>
                 <input
                     type='file'
-                    className='w-full px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 
-                                hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition cursor-pointer'
+                    className='w-full px-3 py-4 rounded-xl border-2 border-dashed border-white/30 bg-[#0d1f35]/40 text-white hover:border-main-blue focus:outline-none focus:ring-2 focus:ring-main-blue/30 transition cursor-pointer'
                     accept='image/*'
                     {...register('profilePicture')}
+                    onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const url = URL.createObjectURL(file);
+                            onPreview(url); // actualiza el estado en AuthPage
+                        }
+                    }}
                 />
             </div>
             {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
 
-            <button
-                type="submit"
-                className="
-                    w-full rounded-xl bg-main-blue px-4 py-3 text-sm font-semibold text-white
-                    shadow-md shadow-main-blue/25 transition-all duration-200
-                    hover:-translate-y-0.5 hover:bg-main-blue-dark hover:shadow-lg
-                    active:translate-y-0"
-            >
-                {loading ? <Spinner small/> : 'Registrarse'}
-            </button>
+            <div className="flex justify-center md:col-span-2 mt-4">
+                <button
+                    type="submit"
+                    className="px-8 py-3 rounded-full bg-gradient-to-r from-main-blue to-emerald-500 text-white font-semibold shadow-md hover:scale-105 transition-transform duration-200"
+                >
+                    {loading ? <Spinner small /> : 'Registrarse'}
+                </button>
+            </div>
 
-            <p className="text-center text-sm text-gray-500">
+
+            <p className="text-center text-sm text-gray-300 md:col-span-2">
                 <button
                     type="button"
                     onClick={onSwitch}

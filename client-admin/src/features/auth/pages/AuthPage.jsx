@@ -18,20 +18,20 @@ export const AuthPage = () => {
 
             <div className='relative w-full max-w-xl rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-2xl md:p-10'>
 
-                <div className='flex justify-center mb-6'>
-                    <div className='rounded-3xl border border-white/20 bg-white/10 p-3 shadow-lg backdrop-blur-md'>
+                <div className="flex justify-center mb-6">
+                    <div className="w-24 h-24 rounded-full border-4 border-main-blue bg-[#0d1f35]/70 shadow-lg overflow-hidden flex items-center justify-center">
                         {isRegister && preview ? (
-                            <img src="{preview}" alt="Foto Perfil" className="w-full h-full object-cover rounded-2xl" />
+                            <img src={preview} alt="Foto Perfil" className="w-full h-full object-cover rounded-full" />
                         ) : (
-                        <img
-                            src='/src/assets/img/logoBanco.png'
-                            alt='NovaBank Logo'
-                            className='h-20 w-auto rounded-2xl'
-                        />
+                            <img
+                                src="/src/assets/img/logoBanco.png"
+                                alt="NovaBank Logo"
+                                className="w-16 h-16 object-contain"
+                            />
                         )}
-                        
                     </div>
                 </div>
+
 
                 <div className='text-center mb-6'>
                     <h1 className='text-2xl lg:text-3xl font-bold text-white mb-2 tracking-tight'>
@@ -42,8 +42,8 @@ export const AuthPage = () => {
                         {isForgot
                             ? 'Ingresa tu correo para recuperar tu contraseña'
                             : isRegister
-                            ? ' Completa los datos para poder registrarte'
-                            : 'Ingresa a tu cuenta de administrador'}
+                                ? ' Completa los datos para poder registrarte'
+                                : 'Ingresa a tu cuenta de administrador'}
                     </p>
                 </div>
 
@@ -53,8 +53,8 @@ export const AuthPage = () => {
                             setIsForgot(false)
                         }}
                     />
-                ): isRegister ? (
-                    <RegisterForm 
+                ) : isRegister ? (
+                    <RegisterForm
                         onSwitch={() => {
                             setIsRegister(false)
                         }}

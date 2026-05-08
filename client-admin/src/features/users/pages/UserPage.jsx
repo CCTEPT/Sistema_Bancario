@@ -1,4 +1,4 @@
-import { DashboardPage } from "../../../app/layouts/DashboardPage"
+import { DashboardPage } from "../../../app/layouts/DashboardPage.jsx"
 export const UserPage = () => {
   return (
     <DashboardPage>
