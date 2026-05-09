@@ -26,9 +26,9 @@ export const ForgotPass = ({ onChange, loading }) => {
     }
 
     return (
-        <form className="space-y-5" onSubmit={handleSubmit(submit)}>
+        <form className="space-y-6 animate-fadeIn" onSubmit={handleSubmit(submit)}>
             <div>
-                <label htmlFor='forgotPassword' className='block text-sm font-medium text-gray-800 mb-1.5'>
+                <label htmlFor='forgotPassword' className='block text-sm font-medium text-gray-300 mb-2'>
                     Recuperar contrasena
                 </label>
 
@@ -36,23 +36,26 @@ export const ForgotPass = ({ onChange, loading }) => {
                     type='email'
                     id='forgotPassword'
                     placeholder='correo@example.com'
-                    className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+                    className='w-full rounded-lg border border-[#83fb7f] bg-[#11151c] px-4 py-3 text-sm text-white
+                    placeholder:text-gray-500 outline-none transition-all duration-200
+                    focus:border-[#83fb7f] focus:ring-2 focus:ring-[#83fb7f]/40'
+                    
                     {...register('forgotPassword', { required: 'Este campo es requerido'})}
                 />
-                {errors.forgotPassword && <p className='text-red-500 text-sm mt-1'>{errors.forgotPassword.message}</p>}
+                {errors.forgotPassword && <p className='text-red-400 text-xs mt-1'>{errors.forgotPassword.message}</p>}
             </div>
 
             <button
                 type = 'submit'
-                className='w-full bg-main-blue hover:opacity-90 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 text-sm'
+                className='w-full rounded-lg bg-[#83fb7f] px-4 py-3 text-sm font-semibold text-[#11151c] shadow-md transition-all duration-200 hover:bg-[#68e865] hover:-translate-y-0.5 active:translate-y-0'
 
             >
                 {loading ? <Spinner /> : 'Enviar correo de recuperación'}
             </button>
-            <p className='text-center text-sm'>
+            <p className='text-center text-sm text-gray-400'>
                 <button
                     type='button'
-                    className='text-main-green hover:underline hover:cursor-pointer'
+                    className='text-[#83fb7f] hover:text-[#68e865] transition-colors hover:underline hover:cursor-pointer'
                     onClick={onChange}
                 >
                     Iniciar sesión

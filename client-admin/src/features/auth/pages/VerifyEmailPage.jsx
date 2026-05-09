@@ -18,7 +18,7 @@ export const VerifyEmailPage = () => {
   const displayMessage = status === 'loading' ? 'Verificando correo, por favor espera...' : message;
 
   return (
-    <div className='flex flex-col justify-center items-center h-screen bg-gray-100 px-4'>
+    <div className='flex flex-col justify-center items-center h-screen bg-[#11151c] px-4'>
       <img src={logo} alt='Kinal Sports' className='w-28 h-28 object-contain mb-4' />
 
       <p className='text-lg font-semibold text-gray-700 text-center max-w-lg' aria-live='polite'>
