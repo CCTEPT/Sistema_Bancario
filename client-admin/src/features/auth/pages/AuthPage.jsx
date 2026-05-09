@@ -8,18 +8,21 @@ export const AuthPage = () => {
     const [isRegister, setIsRegister] = useState(false)
     const [preview, setPreview] = useState(null);
     return (
-        <div className='relative min-h-screen flex items-center justify-center overflow-hidden bg-black p-4'>
-
-            <div className='absolute inset-0'>
-                <div className='absolute -top-40 -left-32 h-[420px] w-[420px] rounded-full bg-main-blue/30 blur-[120px]' />
-                <div className='absolute -bottom-40 -right-32 h-[420px] w-[420px] rounded-full bg-emerald-400/20 blur-[120px]' />
-                <div className='absolute top-1/3 left-1/2 h-[280px] w-[280px] rounded-full bg-white/10 blur-[100px]' />
+        <div className='relative min-h-screen flex items-center justify-center overflow-hidden bg-[#11151c] p-4"'>
+            <div className="absolute inset-0">
+                {/* Gradiente base */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#11151c] via-[#141823] to-[#11151c]" />
+                {/* Patrón geométrico */}
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#83fb7f20_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 animate-pulse" />
+                {/* Halo neón */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-[600px] h-[600px] rounded-full bg-[#83fb7f]/10 blur-[160px]" />
+                </div>
             </div>
-
-            <div className='relative w-full max-w-xl rounded-[2rem] border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-2xl md:p-10'>
+            <div className='relative w-full max-w-md rounded-2xl border border-[#83fb7f] bg-[#141823] p-8 shadow-lg'>
 
                 <div className="flex justify-center mb-6">
-                    <div className="w-24 h-24 rounded-full border-4 border-main-blue bg-[#0d1f35]/70 shadow-lg overflow-hidden flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full border-2 border-[#83fb7f] bg-[#11151c] shadow-md overflow-hidden flex items-center justify-center">
                         {isRegister && preview ? (
                             <img src={preview} alt="Foto Perfil" className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -34,7 +37,7 @@ export const AuthPage = () => {
 
 
                 <div className='text-center mb-6'>
-                    <h1 className='text-2xl lg:text-3xl font-bold text-white mb-2 tracking-tight'>
+                    <h1 className='text-2xl font-bold text-white mb-2'>
                         {isForgot ? 'Recuperar Contraseña' : isRegister ? 'Crear cuenta' : 'Bienvenido de nuevo'}
                     </h1>
 

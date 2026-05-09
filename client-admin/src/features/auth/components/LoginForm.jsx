@@ -23,7 +23,7 @@ export const LoginForm = ({ onForgot, onRegister }) => {
       if(role === "ADMIN_ROLE"){
           navigate('/dashboard');
       }else{
-        navigate('/users')
+        navigate('/dashboard')
       }
       toast.success("Bienvenido de nuevo!", {duration: 3000});
     }
@@ -31,105 +31,81 @@ export const LoginForm = ({ onForgot, onRegister }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='space-y-5 animate-fadeIn'>
-      <div>
-        <label
-          htmlFor='emailOrUsername'
-          className='block text-sm font-semibold text-gray-700 mb-1.5'
-        >
-          Email o Username
-        </label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 animate-fadeIn">
+  {/* Email */}
+  <div>
+    <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-300 mb-2">
+      Email o Username
+    </label>
+    <input
+      type="text"
+      id="emailOrUsername"
+      placeholder="correo@example.com o username"
+      className={`
+        w-full rounded-lg border border-[#83fb7f] bg-[#11151c] px-4 py-3 text-sm text-white
+        placeholder:text-gray-500 outline-none transition-all duration-200
+        focus:border-[#83fb7f] focus:ring-2 focus:ring-[#83fb7f]/40 ${errors.emailOrUsername ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""}`
+      }
+      {...register("emailOrUsername", { required: "Este campo es requerido" })}
+    />
+    {errors.emailOrUsername && ( //si hay un error en emailOrUsername, mostrar el mensaje de error
+      <p className='text-red-400 text-xs mt-1'>{errors.emailOrUsername.message}</p>
+    )}
+  </div>
 
-        <input
-          type='text'
-          id='emailOrUsername'
-          placeholder='correo@example.com o username'
-          className={`
-            w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white
-            placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-            focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
-            ${errors.emailOrUsername ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}
-          `}
-          {
-            ...register('emailOrUsername', {
-              required: 'Este campo es requerido'
-            })
-          }
-        />
+  {/* Password */}
+  <div>
+    <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+      Contraseña
+    </label>
+    <input
+      type="password"
+      id="password"
+      placeholder="••••••••"
+      className={`
+        w-full rounded-lg border border-[#83fb7f] bg-[#11151c] px-4 py-3 text-sm text-white
+        placeholder:text-gray-500 outline-none transition-all duration-200
+        focus:border-[#83fb7f] focus:ring-2 focus:ring-[#83fb7f]/40
+        ${errors.password ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""}
+      `}
+      {...register("password", { required: "Este campo es requerido" })}
+    />
+    {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
 
-        {errors.emailOrUsername && (
-          <p className='text-red-600 text-xs mt-1.5'>
-            {errors.emailOrUsername.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label
-          htmlFor='password'
-          className='block text-sm font-semibold text-gray-700 mb-1.5'
-        >
-          Contraseña
-        </label>
-
-        <input
-          type='password'
-          id='password'
-          placeholder='••••••••'
-          className={`
-            w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white
-            placeholder:text-gray-400 shadow-sm outline-none transition-all duration-200
-            focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
-            ${errors.password ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}
-          `}
-          {
-            ...register('password', {
-              required: 'Este campo es requerido'
-            })
-          }
-        />
-
-        {errors.password && (
-          <p className='text-red-600 text-xs mt-1.5'>
-            {errors.password.message}
-          </p>
-        )}
-
-        <p className='text-right text-sm text-gray-500'>
-        <button
-          type='button'
-          onClick={onForgot}
-          className='font-medium text-main-blue hover:underline hover:cursor-pointer'
-        >
-          ¿Olvidaste tu contraseña?
-        </button>
-      </p>
-      </div>
-      
-        {error && <p className='text-red-750 text-sm text-center'>{error}</p>}
+    <p className="text-right text-sm mt-2">
       <button
-        type='submit'
-        className='
-          w-full rounded-xl bg-main-blue px-4 py-3 text-sm font-semibold text-white
-          shadow-md shadow-main-blue/25 transition-all duration-200
-          hover:-translate-y-0.5 hover:bg-main-blue-dark hover:shadow-lg
-          active:translate-y-0
-        '
-        disabled={loading}
+        type="button"
+        onClick={onForgot}
+        className="text-[#83fb7f] hover:text-[#68e865] transition-colors"
       >
-        {loading ? "Iniciado sesión..." : "Iniciar sesión"}
+        ¿Olvidaste tu contraseña?
       </button>
+    </p>
+  </div>
 
+  {/* Error global */}
+  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      <p className='text-center text-sm text-gray-500'>
-        <button
-          type='button'
-          onClick={onRegister}
-          className='font-medium text-main-blue hover:underline hover:cursor-pointer'
-        >
-          Aún no tienes una cuenta? Registrate aquí
-        </button>
-      </p>
-    </form>
+  {/* Botón */}
+  <button
+    type="submit"
+    className="w-full rounded-lg bg-[#83fb7f] px-4 py-3 text-sm font-semibold text-[#11151c] shadow-md transition-all duration-200 hover:bg-[#68e865] hover:-translate-y-0.5 active:translate-y-0"
+    disabled={loading}
+  >
+    {loading ? "Iniciando sesión..." : "Authenticate"}
+  </button>
+
+  {/* Link registro */}
+  <p className="text-center text-sm text-gray-400">
+    <button
+      type="button"
+      onClick={onRegister}
+      className="text-[#83fb7f] hover:text-[#68e865] transition-colors"
+    >
+      ¿No tienes cuenta? Inicializa una
+    </button>
+  </p>
+</form>
+
   )
 }

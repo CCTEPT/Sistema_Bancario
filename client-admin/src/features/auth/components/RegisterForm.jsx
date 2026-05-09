@@ -33,7 +33,14 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="name" className="block text-sm font-medium text-white mb-2">Nombre</label>
                 <input
-                    {...register("name", { required: "Este campo es requerido" })}
+                    {...register("name", {
+                        required: "Este campo es requerido",
+                        minLength:{
+                            value: 3,
+                            message: 'Debe contener al menos 3 caracteres'
+                        },
+                        validate: (value) => /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/.test(value) || 'Solo letras permitidas'
+                    })}
                     type="text"
                     id="name"
                     placeholder="Nombre"
@@ -47,7 +54,14 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="surname" className="block text-sm font-medium text-white mb-2">Apellido</label>
                 <input
-                    {...register("surname", { required: "Este campo es requerido" })}
+                    {...register("surname", {
+                        required: "Este campo es requerido",
+                        minLength:{
+                            value: 3,
+                            message: 'Debe contener al menos 3 caracteres'
+                        },
+                        validate: (value) => /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/.test(value) || "Solo letras permitidas"
+                    })}
                     type="text"
                     id="surname"
                     placeholder="Apellido"
@@ -61,7 +75,13 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="username" className="block text-sm font-medium text-white mb-2">Username</label>
                 <input
-                    {...register("username", { required: "Este campo es requerido" })}
+                    {...register("username", { 
+                        required: "Este campo es requerido",
+                        minLength:{
+                            value: 3,
+                            message: 'Debe contener al menos 3 caracteres'
+                        }
+                    })}
                     type="text"
                     id="username"
                     placeholder="Nombre de Usuario"
@@ -75,7 +95,14 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="email" className="block text-sm font-medium text-white mb-2">Correo Electrónico</label>
                 <input
-                    {...register("email", { required: "Este campo es requerido" })}
+                    {...register("email", { 
+                        required: "Este campo es requerido",
+                        pattern:{
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: 'Correo invalido'
+                        } 
+                    
+                    })}
                     type="email"
                     id="email"
                     placeholder="correo@example.com"
@@ -90,7 +117,13 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="password" className="block text-sm font-medium text-white mb-2">Contraseña</label>
                 <input
-                    {...register("password", { required: "Este campo es requerido" })}
+                    {...register("password", { 
+                        required: "Este campo es requerido", 
+                        minLength:{
+                            value: 8,
+                            message: 'Debe contener al menos 8 carácteres'
+                        }
+                    })}
                     type="password"
                     id="password"
                     placeholder="••••••••"
@@ -104,7 +137,14 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
             <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">Número de Teléfono</label>
                 <input
-                    {...register("phone", { required: "Este campo es requerido" })}
+                    {...register("phone", { 
+                        required: "Este campo es requerido", 
+                        pattern: {
+                            value: /^[0-9]{8,}$/,
+                            message: 'Debe ser númerico y con 8 carácteres'
+
+                        }
+                    })}
                     type="text"
                     id="phone"
                     placeholder="12345678"

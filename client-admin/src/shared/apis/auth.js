@@ -23,3 +23,29 @@ export const forgotPassword = async (email) => {
 export const resetPassword = async (token, newPassword) =>{
     return await axiosAuth.post('/Auth/reset-password', { token, newPassword })
 }
+
+/*export const getAllUsers = async () => {
+    const { data } = await axiosAuth.get('/Auth/profile');
+    return { users: data} ;
+}*/
+
+export const getProfile = async () => {
+    const { data } = await axiosAuth.get('/Auth/profile');
+    return data;
+};
+
+//actualizar un usuaro
+export const updateUserRole = async (userId, roleName) => {
+    const { data } = await axiosAuth.patch(`/User/${userId}/role`, { roleName });
+    return data;
+};
+
+export const getUserRoles = async (userId) => {
+    const { data } = await axiosAuth.get(`/User/${userId}/roles`);
+    return { users: data} ;
+}
+
+export const getUsersByRole = async (roleName) => {
+    const { data } = await axiosAuth.get(`/User/by-role/${roleName}`);
+    return { users: data} ;
+}
