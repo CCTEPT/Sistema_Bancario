@@ -13,6 +13,7 @@ import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx'
 import { ForgotPassPage } from '../../features/auth/pages/ForgotPassPage.jsx'
 import { ForgotPass } from '../../features/auth/components/ForgotPass.jsx'
 import { DashboardContent } from '../layouts/DashboardContent.jsx'
+import { UserPage } from '../../features/users/pages/UserPage.jsx'
 
 export const AppRoutes = () => {
   return (
@@ -40,6 +41,7 @@ export const AppRoutes = () => {
           <Route path='accounts' element={<Accounts />} />
           <Route path='checks' element={<Checks />} />
           <Route path='movements' element={<Movements />} />
+          <Route path='users' element={<UserPage />} />
         </Route>
     </Routes>
   );

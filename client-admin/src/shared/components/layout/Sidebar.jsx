@@ -6,6 +6,7 @@ const SIDEBAR_ITEMS_BY_ROLE = {
         { label: "Accounts", to: "/dashboard/accounts" },
         { label: "Checks", to: "/dashboard/checks" },
         { label: "Movements", to: "/dashboard/movements" },
+        { label: "Users", to: "/dashboard/users"}
     ],
     USER_ROLE: [
         { label: "Accounts", to: "/dashboard/accounts" },
@@ -31,11 +32,9 @@ export const Sidebar = () => {
                             <Link
                                 to={item.to}
                                 className={`
-                  flex items-center gap-3 rounded-md px-4 py-2 text-sm font-medium transition-all
-                  ${active
-                                        ? "bg-[#11151c] text-[#83fb7f] border-l-4 border-[#83fb7f]"
-                                        : "text-gray-400 hover:bg-[#11151c] hover:text-white"}
-                `}
+                                    flex items-center gap-3 rounded-md px-4 py-2 text-sm font-medium transition-all
+                                    ${active ? "bg-[#11151c] text-[#83fb7f] border-l-4 border-[#83fb7f]" : "text-gray-400 hover:bg-[#11151c] hover:text-white"}
+                                `}
                             >
                                 {item.label}
                             </Link>
