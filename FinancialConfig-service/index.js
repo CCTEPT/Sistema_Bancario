@@ -15,6 +15,17 @@ const app = Fastify({ logger: true })
 
 await connectDB()
 
+app.addHook('onRequest', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', request.headers.origin || '*')
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  reply.header('Access-Control-Allow-Credentials', 'true')
+
+  if (request.method === 'OPTIONS') {
+    return reply.code(204).send()
+  }
+})
+
 // Registrar JWT
 app.register(jwt, {
   secret: process.env.JWT_SECRET || 'dev-secret'
