@@ -1,6 +1,5 @@
 import { useForm } from 'react-hook-form'
 import { Spinner } from "../../../features/auth/components/Spinner.jsx"
-//import { useNavigate } from 'react-router-dom'; 
 import { createUser } from '../../../shared/apis/auth.js';
 
 export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
@@ -15,16 +14,21 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
         formData.append('Email', values.email);
         formData.append('Password', values.password);
         formData.append('Phone', values.phone);
+        formData.append('TipoCuenta', values.tipoCuenta);
+        formData.append('Divisa', values.divisa);
         if (values.profilePicture?.[0]) {
             formData.append('ProfilePicture', values.profilePicture[0]);
         }
 
         const ok = await createUser(formData);
-        if (ok) {
+        if (ok?.status === 201) {
+            localStorage.setItem(
+                'pending_bank_account',
+                JSON.stringify({ tipoCuenta: values.tipoCuenta, divisa: values.divisa })
+            );
             onSwitch();
             reset();
         }
-
     };
 
     return (
@@ -153,6 +157,35 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
                         ${errors.phone ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
                 />
                 {errors.phone && <p className="text-red-400 text-xs mt-1.5">{errors.phone.message}</p>}
+            </div>
+
+            <div>
+                <label htmlFor="tipoCuenta" className="block text-sm font-medium text-white mb-2">Tipo de Cuenta</label>
+                <select
+                    {...register('tipoCuenta', { required: 'Este campo es requerido' })}
+                    id="tipoCuenta"
+                    className={`w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white focus:border-main-blue focus:ring-4 focus:ring-main-blue/30 ${errors.tipoCuenta ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
+                >
+                    <option value="" disabled>Selecciona tipo de cuenta</option>
+                    <option value="ahorro">Ahorro</option>
+                    <option value="corriente">Corriente</option>
+                </select>
+                {errors.tipoCuenta && <p className="text-red-400 text-xs mt-1.5">{errors.tipoCuenta.message}</p>}
+            </div>
+
+            <div>
+                <label htmlFor="divisa" className="block text-sm font-medium text-white mb-2">Divisa</label>
+                <select
+                    {...register('divisa', { required: 'Este campo es requerido' })}
+                    id="divisa"
+                    className={`w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white focus:border-main-blue focus:ring-4 focus:ring-main-blue/30 ${errors.divisa ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
+                >
+                    <option value="" disabled>Selecciona divisa</option>
+                    <option value="GTQ">GTQ</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+                {errors.divisa && <p className="text-red-400 text-xs mt-1.5">{errors.divisa.message}</p>}
             </div>
 
             {/* Imagen */}

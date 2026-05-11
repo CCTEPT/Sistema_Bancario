@@ -8,7 +8,7 @@ export const AuthPage = () => {
     const [isRegister, setIsRegister] = useState(false)
     const [preview, setPreview] = useState(null);
     return (
-        <div className='relative min-h-screen flex items-center justify-center overflow-hidden bg-[#11151c] p-4"'>
+        <div className='relative min-h-screen flex items-center justify-center overflow-hidden bg-[#11151c] p-4'>
             <div className="absolute inset-0">
                 {/* Gradiente base */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#11151c] via-[#141823] to-[#11151c]" />

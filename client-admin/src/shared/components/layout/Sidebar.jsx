@@ -5,12 +5,17 @@ const SIDEBAR_ITEMS_BY_ROLE = {
     ADMIN_ROLE: [
         { label: "Accounts", to: "/dashboard/accounts" },
         { label: "Checks", to: "/dashboard/checks" },
-        { label: "Movements", to: "/dashboard/movements" },
+        { label: "Movements", to: "/dashboard/transactions" },
         { label: "Users", to: "/dashboard/users"}
     ],
     USER_ROLE: [
         { label: "Accounts", to: "/dashboard/accounts" },
-        { label: "Movements", to: "/dashboard/movements" },
+        { label: "Deposit", to: "/dashboard/deposit" },
+        { label: "Movements", to: "/dashboard/transactions" },
+    ],
+    EMPLOYEE_ROLE: [
+        { label: "Accounts", to: "/dashboard/accounts" },
+        { label: "Deposit", to: "/dashboard/deposit" },
     ],
 };
 
