@@ -7,6 +7,7 @@ import Fastify from 'fastify'
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import jwt from '@fastify/jwt'
+import cors from '@fastify/cors'
 
 // 3. LUEGO TUS ARCHIVOS LOCALES
 import { connectDB } from './configs/db.js'
@@ -28,6 +29,17 @@ if (!process.env.AUTH_SERVICE_URL) {
 } else {
   console.log("🔗 Auth service URL:", process.env.AUTH_SERVICE_URL);
 }
+
+// Registro de CORS antes de las rutas
+await app.register(cors, {
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+})
 
 // Registro de JWT con validación explícita
 app.register(jwt, {

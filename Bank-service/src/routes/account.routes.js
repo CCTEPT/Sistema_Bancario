@@ -7,7 +7,7 @@ async function routes(fastify, options) {
     fastify.post(
         "/",
         {
-            preHandler: fastify.authorizeRole("ADMIN_ROLE", "EMPLOYEE_ROLE"),
+            preHandler: fastify.authorizeRole("USER_ROLE", "ADMIN_ROLE", "EMPLOYEE_ROLE"),
             schema: {
                 ...createAccountSchema,
                 tags: ["Accounts"],
@@ -20,7 +20,7 @@ async function routes(fastify, options) {
     fastify.get(
         "/",
         {
-            preHandler: fastify.authorizeRole("EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            preHandler: fastify.authorizeRole("USER_ROLE", "EMPLOYEE_ROLE", "ADMIN_ROLE"),
             schema: {
                 ...getAccountsSchema,
                 tags: ["Accounts"],

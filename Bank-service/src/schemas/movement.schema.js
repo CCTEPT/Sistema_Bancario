@@ -3,6 +3,14 @@ export const depositSchema = {
   body: {
     type: 'object',
     required: ['accountId', 'amount'],
+    examples: [
+      {
+        accountId: '507f1f77bcf86cd799439011',
+        amount: 10000,
+        description: 'Depósito en efectivo',
+        channel: 'CASHIER'
+      }
+    ],
     properties: {
       accountId: {
         type: 'string',
@@ -19,7 +27,7 @@ export const depositSchema = {
       },
       idempotencyKey: {
         type: 'string',
-        description: 'Clave para evitar duplicados en reintentos'
+        description: 'Opcional. Clave para evitar duplicados en reintentos'
       },
       channel: {
         type: 'string',
@@ -132,7 +140,7 @@ export const transferSchema = {
       },
       destinationAccount: {
         type: 'string',
-        description: 'ID de la cuenta destino'
+        description: 'NÃºmero de cuenta destino'
       },
       amount: {
         type: 'number',

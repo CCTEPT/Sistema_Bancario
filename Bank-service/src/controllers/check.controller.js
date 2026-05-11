@@ -1,118 +1,218 @@
-import mongoose from "mongoose";
 import Check from "../models/check.model.js";
 import Account from "../models/account.model.js";
-import Movement from "../models/movement.model.js";
 import { generateCheckNumber } from "../utils/checkNumberGenerator.js";
+import { registrarMovimiento } from "../services/movement.service.js";
 
-export const emitCheck = async (request, reply) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+const CHECK_VALIDITY_DAYS = 90;
 
+const canUseAccount = (request, account) =>
+    request.user.role !== "USER_ROLE" || account.idUsuario === request.user.sub;
+
+export const listChecks = async (request, reply) => {
     try {
-        const { issuingAccountId, amount } = request.body;
-        const userId = request.user.id;
+        const accountFilter = request.user.role === "USER_ROLE"
+            ? { idUsuario: request.user.sub, estado: "ACTIVE" }
+            : { estado: "ACTIVE" };
 
-        if (!amount || amount <= 0) {
-            throw new Error("Amount must be greater than zero");
-        }
+        const accounts = await Account.find(accountFilter).lean();
+        const accountIds = accounts.map((account) => account._id);
 
-        const account = await Account.findOne({
-            _id: issuingAccountId,
-            status: "ACTIVE"
-        }).session(session);
+        const checks = await Check.find({
+            $or: [
+                { issuingAccount: { $in: accountIds } },
+                { receivingAccount: { $in: accountIds } }
+            ]
+        })
+            .sort({ createdAt: -1 })
+            .lean();
 
-        if (!account) {
-            throw new Error("Active account not found");
-        }
-
-        const check = await Check.create([{
-            checkNumber: generateCheckNumber(),
-            issuingAccount: account._id,
-            amount,
-            issuerUser: userId
-        }], { session });
-
-        await Movement.create([{
-            account: account._id,
-            type: "CHECK_EMITTED",
-            amount
-        }], { session });
-
-        await session.commitTransaction();
-        session.endSession();
-
-        return reply.status(201).send({
-            message: "Check emitted successfully",
-            checkId: check[0]._id
+        return reply.send({
+            status: "Success",
+            data: checks
         });
-
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        return reply.status(400).send({
-            error: error.message
+        return reply.code(400).send({
+            status: "Error",
+            message: error.message
         });
     }
 };
 
-
-export const cashCheck = async (request, reply) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+export const emitCheck = async (request, reply) => {
     try {
-        const { id } = request.params;
+        const { issuingAccountId, amount } = request.body;
+        const userId = request.user.sub;
 
-        const check = await Check.findById(id).session(session);
-
-        if (!check) {
-            throw new Error("Check not found");
+        if (!amount || amount <= 0) {
+            throw new Error("El monto debe ser mayor a 0");
         }
 
-        if (check.status !== "EMITIDO") {
-            throw new Error("Check cannot be cashed");
+        const account = await Account.findById(issuingAccountId);
+
+        if (!account || account.estado !== "ACTIVE") {
+            throw new Error("Cuenta emisora activa no encontrada");
         }
 
-        const account = await Account.findOne({
-            _id: check.issuingAccount,
-            status: "ACTIVE"
-        }).session(session);
-
-        if (!account) {
-            throw new Error("Issuing account not active");
+        if (!canUseAccount(request, account)) {
+            throw new Error("No tienes permiso para emitir cheques desde esta cuenta");
         }
 
-        if (account.balance < check.amount) {
-            throw new Error("Insufficient funds");
+        if (account.saldo < amount) {
+            throw new Error("Saldo insuficiente para emitir el cheque");
         }
 
-        account.balance -= check.amount;
-        await account.save({ session });
+        const issueDate = new Date();
+        const expiryDate = new Date(issueDate);
+        expiryDate.setDate(expiryDate.getDate() + CHECK_VALIDITY_DAYS);
 
-        await Movement.create([{
-            account: account._id,
-            type: "CHECK_CASHED",
-            amount: check.amount
-        }], { session });
+        const check = await Check.create({
+            checkNumber: generateCheckNumber(),
+            issuingAccount: account._id,
+            amount,
+            issuerUser: userId,
+            issueDate,
+            expiryDate
+        });
 
-        check.status = "COBRADO";
-        check.cashDate = new Date();
-        await check.save({ session });
+        const movement = await registrarMovimiento({
+            accountId: account._id,
+            movementType: "CHECK_ISSUE",
+            amount,
+            executedBy: userId,
+            description: `Cheque emitido ${check.checkNumber}`,
+            channel: "APP",
+            balanceBefore: account.saldo,
+            balanceAfter: account.saldo
+        });
 
-        await session.commitTransaction();
-        session.endSession();
-
-        return reply.send({
-            message: "Check cashed successfully"
+        return reply.code(201).send({
+            status: "Success",
+            message: "Cheque emitido correctamente",
+            data: {
+                check,
+                movement
+            }
         });
 
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        return reply.code(400).send({
+            status: "Error",
+            message: error.message
+        });
+    }
+};
 
-        return reply.status(400).send({
-            error: error.message
+export const cashCheck = async (request, reply) => {
+    try {
+        const { id } = request.params;
+        const { receivingAccountId, checkNumber } = request.body;
+
+        if (!receivingAccountId) {
+            throw new Error("Selecciona una cuenta receptora");
+        }
+
+        const checkQuery = id
+            ? { _id: id }
+            : { checkNumber: checkNumber?.trim() };
+
+        const check = await Check.findOne(checkQuery);
+
+        if (!check) {
+            throw new Error("Cheque no encontrado");
+        }
+
+        if (check.status !== "EMITIDO") {
+            throw new Error("El cheque no puede cobrarse");
+        }
+
+        if (check.expiryDate && check.expiryDate < new Date()) {
+            check.status = "RECHAZADO";
+            await check.save();
+            throw new Error("El cheque esta vencido");
+        }
+
+        const issuingAccount = await Account.findById(check.issuingAccount);
+        const receivingAccount = await Account.findById(receivingAccountId);
+
+        if (!issuingAccount || issuingAccount.estado !== "ACTIVE") {
+            throw new Error("Cuenta emisora activa no encontrada");
+        }
+
+        if (!receivingAccount || receivingAccount.estado !== "ACTIVE") {
+            throw new Error("Cuenta receptora activa no encontrada");
+        }
+
+        if (!canUseAccount(request, receivingAccount)) {
+            throw new Error("No tienes permiso para cobrar cheques en esta cuenta");
+        }
+
+        if (issuingAccount.idUsuario === receivingAccount.idUsuario) {
+            throw new Error("No puedes cobrar un cheque emitido por tus propias cuentas");
+        }
+
+        if (issuingAccount.divisa !== receivingAccount.divisa) {
+            throw new Error("La cuenta receptora debe usar la misma divisa del cheque");
+        }
+
+        if (issuingAccount.saldo < check.amount) {
+            throw new Error("Saldo insuficiente en la cuenta emisora");
+        }
+
+        const issuerBefore = issuingAccount.saldo;
+        const receiverBefore = receivingAccount.saldo;
+
+        issuingAccount.saldo -= check.amount;
+        receivingAccount.saldo += check.amount;
+
+        const issuerAfter = issuingAccount.saldo;
+        const receiverAfter = receivingAccount.saldo;
+
+        await issuingAccount.save();
+        await receivingAccount.save();
+
+        const issuerMovement = await registrarMovimiento({
+            accountId: issuingAccount._id,
+            destinationAccountId: receivingAccount._id,
+            movementType: "CHECK_CASH",
+            amount: check.amount,
+            executedBy: request.user.sub,
+            description: `Cheque cobrado ${check.checkNumber}`,
+            channel: "APP",
+            balanceBefore: issuerBefore,
+            balanceAfter: issuerAfter
+        });
+
+        const receiverMovement = await registrarMovimiento({
+            accountId: receivingAccount._id,
+            destinationAccountId: issuingAccount._id,
+            movementType: "CHECK_CASH",
+            amount: check.amount,
+            executedBy: request.user.sub,
+            description: `Cheque recibido ${check.checkNumber}`,
+            channel: "APP",
+            balanceBefore: receiverBefore,
+            balanceAfter: receiverAfter
+        });
+
+        check.status = "COBRADO";
+        check.cashDate = new Date();
+        check.receivingAccount = receivingAccount._id;
+        await check.save();
+
+        return reply.send({
+            status: "Success",
+            message: "Cheque cobrado correctamente",
+            data: {
+                check,
+                issuerMovement,
+                receiverMovement
+            }
+        });
+
+    } catch (error) {
+        return reply.code(400).send({
+            status: "Error",
+            message: error.message
         });
     }
 };

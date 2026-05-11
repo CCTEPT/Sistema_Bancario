@@ -1,11 +1,8 @@
-import mongoose from "mongoose"
 import Account from "../models/account.model.js"
 import { registrarMovimiento } from "./movement.service.js"
+import mongoose from "mongoose"
 
 export const perfomTransfer = async (dataTransfer, userId) => {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-
     try {
         const { sourceAccount, destinationAccount, amount } = dataTransfer
 
@@ -16,18 +13,23 @@ export const perfomTransfer = async (dataTransfer, userId) => {
         if (!sourceAccount || !destinationAccount) {
             throw new Error("Se requieren cuentas origen y destino")
         }
-        if (sourceAccount === destinationAccount) {
-            throw new Error("No se puede transferir a la misma cuenta")
-        }
-
-        const source = await Account.findById(sourceAccount).session(session)
-        const destination = await Account.findById(destinationAccount).session(session)
+        const source = await Account.findById(sourceAccount)
+        const destinationQuery = mongoose.Types.ObjectId.isValid(destinationAccount)
+            ? { $or: [{ numeroCuenta: destinationAccount }, { _id: destinationAccount }] }
+            : { numeroCuenta: destinationAccount }
+        const destination = await Account.findOne(destinationQuery)
 
         if (!source) {
             throw new Error("Cuenta origen no encontrada")
         }
+        if (source.idUsuario !== userId) {
+            throw new Error("No tienes permiso para transferir desde esta cuenta")
+        }
         if (!destination) {
             throw new Error("Cuenta destino no encontrada")
+        }
+        if (source._id.equals(destination._id)) {
+            throw new Error("No se puede transferir a la misma cuenta")
         }
 
         // verificar estados
@@ -52,44 +54,37 @@ export const perfomTransfer = async (dataTransfer, userId) => {
         const sourceAfter = source.saldo
         const destinationAfter = destination.saldo
 
-        await source.save({ session })
-        await destination.save({ session })
+        await source.save()
+        await destination.save()
 
         // Registrar movimientos
-        await registrarMovimiento({
+        const transferOut = await registrarMovimiento({
             accountId: source._id,
             destinationAccountId: destination._id,
             movementType: "TRANSFER_OUT",
             amount,
             executedBy: userId,
-            description: "Transferencia enviada",
-            channel: "INTERNAL_TRANSFER",
-            session,
+            description: dataTransfer.description || "Transferencia enviada",
+            channel: dataTransfer.channel || "APP",
             balanceBefore: sourceBefore,
             balanceAfter: sourceAfter
         })
 
-        await registrarMovimiento({
+        const transferIn = await registrarMovimiento({
             accountId: destination._id,
             destinationAccountId: source._id,
             movementType: "TRANSFER_IN",
             amount,
             executedBy: userId,
-            description: "Transferencia recibida",
-            channel: "INTERNAL_TRANSFER",
-            session,
+            description: dataTransfer.description || "Transferencia recibida",
+            channel: dataTransfer.channel || "APP",
             balanceBefore: destinationBefore,
             balanceAfter: destinationAfter
         })
 
-        await session.commitTransaction()
-        session.endSession()
-
-        return { message: "Transfer successful" }
+        return { message: "Transfer successful", transferOut, transferIn }
 
     } catch (error) {
-        await session.abortTransaction()
-        session.endSession()
         throw error
     }
 }

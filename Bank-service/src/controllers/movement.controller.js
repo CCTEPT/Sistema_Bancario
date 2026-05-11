@@ -1,7 +1,7 @@
 import { deposit } from '../services/deposit.service.js'
 import { withdraw } from '../services/withdraw.service.js'
 import { perfomTransfer } from '../services/transfer.services.js'
-import { getMovementsByAccount } from '../services/movement.service.js'
+import { getMovementsByAccount, getMovementsForUser } from '../services/movement.service.js'
 
 export async function depositController(request, reply) {
     try {
@@ -62,6 +62,20 @@ export async function historyController(request, reply) {
     try {
         const { accountId } = request.params
         const movements = await getMovementsByAccount(accountId, request.query)
+        return reply.send({ status: 'Success', data: movements })
+    } catch (error) {
+        return reply.code(400).send({ status: 'Error', message: error.message })
+    }
+}
+
+export async function userHistoryController(request, reply) {
+    try {
+        const movements = await getMovementsForUser(
+            request.user.sub,
+            request.user.role,
+            request.query
+        )
+
         return reply.send({ status: 'Success', data: movements })
     } catch (error) {
         return reply.code(400).send({ status: 'Error', message: error.message })
