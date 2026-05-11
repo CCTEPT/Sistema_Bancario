@@ -1,589 +1,561 @@
-# 🏦 Sistema Bancario
+# Sistema Bancario NovaBank
 
-Proyecto compuesto por varios micro‑servicios que conforman una plataforma bancaria simple.  
-Cada servicio está desarrollado con tecnologías modernas (Node/Express, Fastify, .NET Core) y se comunican mediante JWT.
+Plataforma bancaria basada en microservicios. El proyecto integra autenticacion, gestion de cuentas, movimientos bancarios, cheques, configuracion financiera y un panel administrativo web.
 
----
+## Contenido
 
-## 📁 Estructura general
+- [Arquitectura general](#arquitectura-general)
+- [Tecnologias](#tecnologias)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Servicios](#servicios)
+- [Panel administrativo](#panel-administrativo)
+- [Bases de datos](#bases-de-datos)
+- [Variables de entorno](#variables-de-entorno)
+- [Como ejecutar](#como-ejecutar)
+- [Endpoints principales](#endpoints-principales)
+- [Swagger](#swagger)
+- [Credenciales iniciales](#credenciales-iniciales)
+- [Creditos](#creditos)
 
-```
-/
-├─ Authentication-service/      ← .NET Core API para auth & users
-├─ Bank-service/                ← Node.js / Fastify para cuentas, movimientos, cheques
-├─ FinancialConfig-service/     ← Node.js / Fastify para tipos de cuenta, divisas, tasas
-└─ pg/                          ← docker-compose con PostgreSQL
-```
+## Arquitectura general
 
----
+El sistema esta dividido en servicios independientes:
 
-## 🔒 Authentication‑service
+| Componente | Tecnologia | Responsabilidad |
+| --- | --- | --- |
+| `Authentication-service` | ASP.NET Core 8, EF Core, PostgreSQL | Registro, login, JWT, roles, verificacion de email, recuperacion de contrasena y perfiles |
+| `Bank-service` | Node.js, Fastify, MongoDB | Cuentas bancarias, depositos, retiros, transferencias, historial y cheques |
+| `FinancialConfig-service` | Node.js, Fastify, MongoDB | Tipos de cuenta, monedas, tasas de cambio y conversiones |
+| `client-admin` | React, Vite, Tailwind CSS, Zustand, React Query | Interfaz web para usuarios, administradores y empleados |
+| `pg` | Docker Compose, PostgreSQL | Base de datos del servicio de autenticacion |
 
-**Tecnología:** ASP.NET Core  
-**Objetivo:** gestionar usuarios, login, roles y emisión de tokens JWT.
+La autenticacion se centraliza en `Authentication-service`. Los servicios Node reciben el token JWT por medio del header:
 
-### Endpoints principales
-- `POST /api/auth/login` → recibe credenciales y devuelve JWT
-- `POST /api/auth/register` → registrar nuevo usuario
-- `GET /api/users` → listado protegido (requiere JWT)
-- `PUT /api/users/{id}/role` → cambiar rol
-
-El token generado se utiliza como `Bearer` en los demás servicios.
-
-### 🏗 Arquitectura interna (Clean Architecture)
-
-Este servicio sigue una arquitectura en capas (API, Application, Domain, Persistence). A continuación se muestra la estructura principal y algunas clases clave.
-
-#### 📁 Raíz del proyecto
-
-```
-Authentication-service/auth-service/src/
+```http
+Authorization: Bearer <token>
 ```
 
-#### 🌐 AuthService.Api (Capa de Presentación)
+## Tecnologias
 
-Contiene los controladores, middlewares y configuración del servidor.
+### Backend
 
-```
-AuthService.Api/
-│   Program.cs
-│   appsettings.json
-│   appsettings.Development.json
-│
-├── Controllers/
-│   ├── AuthController.cs
-│   ├── UserController.cs
-│   └── HealthController.cs
-│
-├── Middlewares/
-│   └── GlobalExceptionMiddleware.cs
-│
-├── Extensions/
-│   ├── AuthenticationExtensions.cs
-│   ├── SecurityExtensions.cs
-│   ├── RateLimitingExtensions.cs
-│   └── ServiceCollectionExtensions.cs
-│
-├── Models/
-│   ├── ErrorResponse.cs
-│   └── FormFileAdapter.cs
-│
-└── ModelBinders/
-    └── FileDataModelBinder.cs
-```
+- .NET 8 / ASP.NET Core Web API
+- Entity Framework Core
+- PostgreSQL con Npgsql
+- Node.js con Fastify
+- MongoDB con Mongoose
+- JWT Bearer Authentication
+- Swagger / OpenAPI
+- Serilog
+- Cloudinary
+- SMTP / MailKit
 
-**Clases importantes**
-- `Program.cs` → Configuración principal del servidor
-- `AuthController` → Login, registro y autenticación
-- `UserController` → Gestión de usuarios
-- `GlobalExceptionMiddleware` → Manejo global de errores
+### Frontend
 
-#### 🧠 AuthService.Application (Lógica de Negocio)
+- React 19
+- Vite
+- Tailwind CSS
+- Shadcn/Radix UI
+- Zustand
+- TanStack React Query
+- Axios
+- React Router
+- Recharts
 
-Aquí vive la lógica real del sistema.
+### Herramientas
 
-```
-AuthService.Application/
-│
-├── DTOs/
-├── Services/
-├── Interfaces/
-├── Validators/
-└── Exceptions/
-```
+- Docker / Docker Compose
+- pnpm
+- npm
+- Postman o REST Client
 
-**Servicios destacados**
-- `AuthService`, `UserManagementService`, `JwtTokenService`, `PasswordHashService`, `EmailService`, `CloudinaryService`
+## Estructura del proyecto
 
-**Interfaces clave**
-`IAuthService`, `IUserManagementService`, `IJwtTokenService`, `IPasswordHashService`, `IEmailService`, `ICloudinaryService`
-
-#### 🧱 AuthService.Domain (Reglas del Dominio)
-
-Contiene entidades y contratos del sistema.
-
-```
-AuthService.Domain/
-│
-├── Entities/
-│   ├── User.cs
-│   ├── Role.cs
-│   ├── UserProfile.cs
-│   ├── UserEmail.cs
-│   ├── UserRole.cs
-│   └── UserPasswordReset.cs
-│
-├── Interfaces/
-│   ├── IUserRepository.cs
-│   └── IRoleRepository.cs
-│
-├── Enums/
-│   └── UserRole.cs
-│
-└── Constants/
-    └── RoleConstants.cs
+```text
+Sistema_Bancario/
+|-- Authentication-service/
+|   `-- auth-service/
+|       |-- global.json
+|       `-- src/
+|           |-- AuthService.Api/
+|           |-- AuthService.Application/
+|           |-- AuthService.Domain/
+|           `-- AuthService.Persistence/
+|-- Bank-service/
+|   |-- configs/
+|   |-- src/
+|   |   |-- controllers/
+|   |   |-- middlewares/
+|   |   |-- models/
+|   |   |-- routes/
+|   |   |-- schemas/
+|   |   |-- services/
+|   |   `-- utils/
+|   `-- index.js
+|-- FinancialConfig-service/
+|   |-- configs/
+|   |-- src/
+|   |   |-- controllers/
+|   |   |-- middlewares/
+|   |   |-- models/
+|   |   |-- routes/
+|   |   |-- schemas/
+|   |   `-- services/
+|   `-- index.js
+|-- client-admin/
+|   |-- src/
+|   |   |-- app/
+|   |   |-- components/
+|   |   |-- features/
+|   |   |-- shared/
+|   |   `-- styles/
+|   `-- vite.config.js
+|-- pg/
+|   `-- docker-compose.yml
+|-- .gitignore
+|-- LICENSE
+`-- README.md
 ```
 
-#### 🗄 AuthService.Persistence (Infraestructura y BD)
+## Servicios
 
-Implementa acceso a datos con Entity Framework Core.
+### Authentication-service
 
-```
-AuthService.Persistence/
-│
-├── Data/
-│   ├── ApplicationDbContext.cs
-│   └── DataSeeder.cs
-│
-├── Repositories/
-│   ├── UserRepository.cs
-│   └── RoleRepository.cs
-│
-└── Migrations/
-```
+Servicio de autenticacion desarrollado con Clean Architecture.
 
-**Clases importantes**
-- `ApplicationDbContext` → Configuración de EF Core
-- `DataSeeder` → Carga inicial (Admin por defecto)
-- `UserRepository`, `RoleRepository`
+Capas principales:
 
----
+- `AuthService.Api`: controladores, middlewares, Swagger, CORS, seguridad y configuracion HTTP.
+- `AuthService.Application`: DTOs, validaciones, servicios de aplicacion y excepciones de negocio.
+- `AuthService.Domain`: entidades, constantes, enums e interfaces de repositorio.
+- `AuthService.Persistence`: `ApplicationDbContext`, repositorios, migraciones y datos semilla.
 
-## 💳 Bank‑service
+Funcionalidades:
 
-**Tecnología:** Node.js + Fastify  
-Provee:
+- Registro de usuarios con imagen de perfil opcional.
+- Login con JWT.
+- Verificacion de email.
+- Reenvio de codigo de verificacion.
+- Recuperacion y reseteo de contrasena.
+- Consulta de perfil autenticado.
+- Consulta de perfil por ID.
+- Gestion de roles.
+- Rate limiting.
+- Headers de seguridad.
+- Manejo global de errores.
+- Logs con Serilog.
 
-- CRUD de cuentas bancarias
-- Depósitos, retiros, transferencias
-- Generación de cheques
+Puerto por defecto en desarrollo:
 
-### Rutas
-
-- `POST /api/accounts` – crear cuenta (JWT)
-- `GET /api/accounts` – listar cuentas
-- `POST /api/movements/deposit` – depositar
-- `POST /api/movements/withdraw` – retirar
-- `POST /api/movements/transfer` – transferir
-- etc.
-
-Utiliza el servicio de `FinancialConfig` para validar tipos de cuenta y tarifas, y el service de auth para validar JWT/roles.
-
----
-
-## 💱 FinancialConfig‑service
-
-**Tecnología:** Node.js + Fastify  
-Administra la configuración financiera:
-
-- Tipos de cuenta (`/api/account-types`)
-- Monedas (`/api/currencies`)
-- Tasas de cambio (`/api/exchange/*`)
-
-Endpoints protegidos con JWT para creación/actualización; el resto es público.
-
----
-
-## ⚙️ Configuración común
-
-Cada servicio carga variables desde `.env`. Ejemplos:
-
-```ini
-PORT=3000
-MONGO_URI=mongodb://localhost:27017/financialconfig
-JWT_SECRET=unsecreto
-DB_CONNECTION=...
+```text
+http://localhost:5092
+https://localhost:7233
 ```
 
-Asegúrate de tener los servicios de base de datos correspondientes (MongoDB, SQL Server, PostgreSQL).
+### Bank-service
 
----
+Servicio principal de operaciones bancarias con Fastify y MongoDB.
 
-## 🚀 Levantar los servicios
+Funcionalidades:
 
-1. **Autenticación**
+- Crear y consultar cuentas bancarias.
+- Depositar fondos.
+- Retirar fondos.
+- Transferir entre cuentas.
+- Consultar historial de movimientos.
+- Emitir, listar y cobrar cheques.
+- Validar JWT y roles.
 
-   ```bash
-   cd Authentication-service/auth-service
-   dotnet run --project src/AuthService.Api/AuthService.Api.csproj
-   ```
+Puerto configurado en codigo:
 
-2. **Bank-service**
-
-   ```bash
-   cd Bank-service
-   pnpm install
-   pnpm run dev
-   ```
-
-3. **FinancialConfig-service**
-
-   ```bash
-   cd FinancialConfig-service
-   pnpm install
-   pnpm run dev
-   ```
-
-4. (Opcional) Iniciar la base de datos con Docker:
-
-   ```bash
-   cd pg
-   docker-compose up -d
-   ```
-
----
-
-## 📄 Documentación Swagger
-
-Todos los servicios Node exponen Swagger UI:
-
-- **Bank-service:** `http://localhost:3001/docs` (o puerto configurado)
-- **FinancialConfig-service:** `http://localhost:3000/docs`
-
-Para usar rutas protegidas haz clic en **Authorize** y provee el JWT en formato:
-
-```
-Bearer <tu_token>
+```text
+http://localhost:3000
 ```
 
----
+### FinancialConfig-service
 
-## 🛠 Desarrollo & pruebas
+Servicio de configuracion financiera con Fastify y MongoDB.
 
-- Se usan **pnpm** para dependencias en los servicios Node.
-- Los esquemas de validación están en `src/schemas`; los servicios en `src/services`.
-- Puedes usar `AuthService.Api.http` dentro del proyecto de auth para probar con VS Code REST Client.
+Funcionalidades:
 
----
+- CRUD de tipos de cuenta.
+- CRUD de monedas.
+- Registro y consulta de tasas de cambio.
+- Conversion entre monedas.
+- Endpoints publicos de lectura.
+- Endpoints protegidos para escritura.
 
-## 📌 Tips
+Puerto por defecto:
 
-- El token JWT se obtiene desde `Authentication-service`; copia el valor y úsalo en los demás servicios.
-- Las rutas de exchange permiten calcular conversiones y registrar tasas.
-- Las colecciones de Mongo se llaman `accounttypes`, `currencies`, `exchangerates` (si corres FinancialConfig).
-
----
-
-## 📚 Referencias
-
-- Fastify + Swagger: configuración ya incluida en cada proyecto Node.
-- MongoDB con Mongoose en cada servicio Node.
-- JWT con `@fastify/jwt` y middleware propio `auth.middleware.js`.
-
----
-
-¡Listo! este README ofrece una visión global agradable y sirve como guía de uso para cualquiera que clona el repo. 😄
-
-- `.gitignore` → Archivos ignorados por Git  
-- `LICENSE` → Licencia MIT  
-- `README.md` → Documentación principal  
-- `pg/` → Contenedor Docker para PostgreSQL  
-
----
-
-# 🏗 Arquitectura Interna
-
-Ruta principal:
-
-```
-Authentication-service/auth-service/src/
+```text
+http://localhost:4000
 ```
 
----
+Puede cambiarse con la variable `PORT`.
 
-# 🌐 AuthService.Api (Capa de Presentación)
+## Panel administrativo
 
-Contiene los controladores, middlewares y configuración del servidor.
+El directorio `client-admin` contiene la aplicacion web del sistema.
 
-```
-AuthService.Api/
-│   Program.cs
-│   appsettings.json
-│   appsettings.Development.json
-│
-├── Controllers/
-│   ├── AuthController.cs
-│   ├── UserController.cs
-│   └── HealthController.cs
-│
-├── Middlewares/
-│   └── GlobalExceptionMiddleware.cs
-│
-├── Extensions/
-│   ├── AuthenticationExtensions.cs
-│   ├── SecurityExtensions.cs
-│   ├── RateLimitingExtensions.cs
-│   └── ServiceCollectionExtensions.cs
-│
-├── Models/
-│   ├── ErrorResponse.cs
-│   └── FormFileAdapter.cs
-│
-└── ModelBinders/
-    └── FileDataModelBinder.cs
-```
+Modulos principales:
 
-### 🔹 Clases Importantes
+- Login y registro.
+- Verificacion de email.
+- Recuperacion de contrasena.
+- Dashboard.
+- Cuentas.
+- Cheques.
+- Transacciones.
+- Depositos.
+- Retiros.
+- Transferencias.
+- Conversion de moneda.
+- Gestion de usuarios.
+- Proteccion de rutas por autenticacion y roles.
 
-- `Program.cs` → Configuración principal del servidor
-- `AuthController` → Login, registro y autenticación
-- `UserController` → Gestión de usuarios
-- `GlobalExceptionMiddleware` → Manejo global de errores
+Rutas principales del frontend:
 
----
+| Ruta | Descripcion |
+| --- | --- |
+| `/` | Pantalla de autenticacion |
+| `/login` | Login |
+| `/register` | Registro |
+| `/verify-email` | Verificacion de email |
+| `/forgot-password` | Solicitud de recuperacion |
+| `/reset-password` | Reseteo de contrasena |
+| `/dashboard` | Vista principal protegida |
+| `/dashboard/accounts` | Cuentas |
+| `/dashboard/checks` | Cheques |
+| `/dashboard/transactions` | Movimientos |
+| `/dashboard/users` | Usuarios |
+| `/dashboard/deposit` | Depositos |
+| `/dashboard/withdraw` | Retiros |
+| `/dashboard/transfer` | Transferencias |
+| `/dashboard/convert` | Conversion de moneda |
 
-# 🧠 AuthService.Application (Lógica de Negocio)
+Puerto por defecto de Vite:
 
-Aquí vive la lógica real del sistema.
-
-```
-AuthService.Application/
-│
-├── DTOs/
-├── Services/
-├── Interfaces/
-├── Validators/
-└── Exceptions/
+```text
+http://localhost:5173
 ```
 
-### 🔹 Clases Importantes
+## Bases de datos
 
-#### Servicios
-- `AuthService`
-- `UserManagementService`
-- `JwtTokenService`
-- `PasswordHashService`
-- `EmailService`
-- `CloudinaryService`
+### PostgreSQL
 
-#### Interfaces
-- `IAuthService`
-- `IUserManagementService`
-- `IJwtTokenService`
-- `IPasswordHashService`
-- `IEmailService`
-- `ICloudinaryService`
+Usado por `Authentication-service`.
 
-#### DTOs
-- `LoginDto`
-- `RegisterDto`
-- `AuthResponseDto`
-- `UserResponseDto`
-- `UpdateUserRoleDto`
+El archivo `pg/docker-compose.yml` levanta un contenedor con:
 
-#### Excepciones
-- `BusinessException`
-- `ErrorCodes`
-
----
-
-# 🧱 AuthService.Domain (Reglas del Dominio)
-
-Contiene entidades y contratos del sistema.
-
-```
-AuthService.Domain/
-│
-├── Entities/
-│   ├── User.cs
-│   ├── Role.cs
-│   ├── UserProfile.cs
-│   ├── UserEmail.cs
-│   ├── UserRole.cs
-│   └── UserPasswordReset.cs
-│
-├── Interfaces/
-│   ├── IUserRepository.cs
-│   └── IRoleRepository.cs
-│
-├── Enums/
-│   └── UserRole.cs
-│
-└── Constants/
-    └── RoleConstants.cs
+```text
+Host: localhost
+Puerto externo: 5500
+Base de datos: novabank
+Usuario: CCCTP
 ```
 
-### 🔹 Entidades Clave
+### MongoDB
 
-- `User` → Entidad principal del sistema
-- `Role` → Roles del sistema
-- `UserProfile` → Información adicional del usuario
-- `UserPasswordReset` → Gestión de recuperación de contraseña
+Usado por:
 
----
+- `Bank-service`
+- `FinancialConfig-service`
 
-# 🗄 AuthService.Persistence (Infraestructura y Base de Datos)
+Ambos servicios esperan una variable `MONGO_URI`.
 
-Implementa acceso a datos con Entity Framework Core.
+## Variables de entorno
 
-```
-AuthService.Persistence/
-│
-├── Data/
-│   ├── ApplicationDbContext.cs
-│   └── DataSeeder.cs
-│
-├── Repositories/
-│   ├── UserRepository.cs
-│   └── RoleRepository.cs
-│
-└── Migrations/
+No subas credenciales reales al repositorio. Usa `.env`, variables locales o secretos de usuario.
+
+### Bank-service
+
+Crear `Bank-service/.env`:
+
+```env
+MONGO_URI=mongodb://localhost:27017/novabank_bank
+JWT_SECRET=ClaveSuperSecretaDePrueba1234567890
+JWT_ISSUER=NovaBank
+JWT_AUDIENCE=NovaBank
+AUTH_SERVICE_URL=http://localhost:5092
 ```
 
-### 🔹 Clases Importantes
+### FinancialConfig-service
 
-- `ApplicationDbContext` → Configuración de EF Core
-- `DataSeeder` → Carga inicial (Admin por defecto)
-- `UserRepository` → Acceso a usuarios
-- `RoleRepository` → Acceso a roles
+Crear `FinancialConfig-service/.env`:
 
----
-
-# 🐳 Base de Datos
-
-```
-pg/
-└── docker-compose.yml
+```env
+PORT=4000
+MONGO_URI=mongodb://localhost:27017/novabank_financial_config
+JWT_SECRET=ClaveSuperSecretaDePrueba1234567890
 ```
 
-Contiene la configuración del contenedor PostgreSQL.
+### client-admin
 
----
+Crear `client-admin/.env`:
 
-# 🎯 Resumen Arquitectónico
+```env
+VITE_AUTH=http://localhost:5092/api/v1
+VITE_BANK_SERVICE=http://localhost:3000/api
+VITE_FINANCIAL_SERVICE=http://localhost:4000/api
+```
 
-- **API** → Expone endpoints
-- **Application** → Contiene la lógica de negocio
-- **Domain** → Define las reglas y entidades
-- **Persistence** → Acceso a base de datos
-- **pg** → Infraestructura Docker
+### Authentication-service
 
----
+Configurar `Authentication-service/auth-service/src/AuthService.Api/appsettings.json` o `appsettings.Development.json`.
 
-# 🧩 Patrón Aplicado
-
-- Clean Architecture
-- Repository Pattern
-- Dependency Injection
-- DTO Pattern
-- Middleware Global de Excepciones
-
----
-
-## 🚀 Funcionalidades Principales
-
-### 🔑 Autenticación y Autorización
-- **Registro de Usuarios**: Validación de datos y creación de cuenta con estado inactivo.
-- **Inicio de Sesión (Login)**: Generación de **JWT (JSON Web Tokens)** con Claims de identidad.
-- **Verificación de Email**: Flujo de activación de cuenta mediante tokens únicos enviados por correo electrónico.
-- **Protección de Rutas**: Control de acceso basado en roles mediante atributos `[Authorize]`.
-
-### 🛡️ Gestión de Usuarios (Admin Only)
-- **RBAC (Role-Based Access Control)**: Roles definidos: `ADMIN_ROLE`, `EMPLOYEE_ROLE`, `USER_ROLE`.
-- **PATCH de Roles**: Endpoint especializado para actualizar el rango de un usuario sin modificar el resto de su información.
-- **Data Seeder**: Inicialización automática de la base de datos con un administrador maestro por defecto.
-
-### 🖼️ Perfil y Multimedia
-- **Integración con Cloudinary**: Almacenamiento y optimización de imágenes de perfil en la nube.
-- **Avatar por Defecto**: Asignación automática de imagen para nuevos usuarios.
-
----
-
-## 🛠 Tecnologías Utilizadas
-
-### BackEnd
-- **Framework**: .NET 8 / ASP.NET Core Web API
-- **ORM**: Entity Framework Core
-- **Seguridad**: JWT Bearer Authentication & BCrypt
-
-### Base de Datos
-- **Motor**: PostgreSQL (Dockerizado)
-
-### Herramientas y Servicios
-- **Cloudinary**: Gestión de imágenes.
-- **MailKit / SMTP**: Envío de correos electrónicos.
-- **Postman**: Pruebas de integración.
-
----
-
-## 📡 Endpoints Principales (v1)
-
-Base URL: `http://localhost:PUERTO/api/v1`
-
-### Autenticación (`/auth`)
-
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| `POST` | `/auth/register` | Registro de nuevos usuarios | No |
-| `POST` | `/auth/login` | Login y obtención de JWT | No |
-| `POST` | `/auth/verify-email`| Verificación de cuenta por token| No |
-
-### Usuarios (`/user`)
-
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| `GET` | `/user/profile` | Obtener perfil actual | Sí |
-| `PATCH` | `/user/{userId}/role` | Cambiar rol de usuario | Sí (Admin) |
-
----
-
-## ⚙️ Configuración del Entorno
-
-Configura tu `appsettings.json` con las siguientes llaves:
+Llaves importantes:
 
 ```json
 {
-  "JwtSettings": {
-    "Secret": "tu_clave_secreta_de_32_caracteres",
-    "Issuer": "NovaBank",
-    "Audience": "NovaBank"
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=novabank;Username=CCCTP;Password=admin;Port=5500"
   },
-  "CloudinarySettings": {
-    "CloudName": "dgbvb0sfu",
-    "ApiKey": "342864999763714",
-    "ApiSecret": "tu_api_secret",
-    "Folder": "auth_novabank/profiles",
-    "DefaultAvatarPath": "default-avatar-user_kit7oq"
+  "JwtSettings": {
+    "SecretKey": "tu_clave_secreta_de_32_caracteres_o_mas",
+    "Issuer": "NovaBank",
+    "Audience": "NovaBank",
+    "ExpirationMinutes": 30
+  },
+  "AppSettings": {
+    "FrontendUrl": "http://localhost:5173"
   }
 }
 ```
 
+Tambien se usan configuraciones para Cloudinary, SMTP, logging y seguridad.
 
-## 🏁 Cómo ejecutar el proyecto
+## Como ejecutar
 
-### 1️⃣ Iniciar el contenedor de Base de Datos
+### 1. Levantar PostgreSQL
 
 ```bash
+cd pg
 docker compose up -d
 ```
 
-### 2️⃣ Compilar el proyecto
+### 2. Ejecutar Authentication-service
 
 ```bash
-dotnet build --project AuthService.Api
+cd Authentication-service/auth-service
+dotnet restore
+dotnet run --project src/AuthService.Api/AuthService.Api.csproj
 ```
 
-### 3️⃣ Ejecutar la API
+Swagger:
+
+```text
+http://localhost:5092/swagger
+```
+
+Health check:
+
+```text
+http://localhost:5092/api/v1/health
+```
+
+### 3. Ejecutar Bank-service
 
 ```bash
-dotnet run --project AuthService.Api
+cd Bank-service
+pnpm install
+pnpm run dev
 ```
 
----
+Swagger:
 
-## 💡 Nota
+```text
+http://localhost:3000/docs
+```
 
-El `DataSeeder` creará automáticamente las credenciales de administrador:
+### 4. Ejecutar FinancialConfig-service
 
-- **Email:** admin@local.com  
-- **Name:** admin
-- **Password:** admin  
+```bash
+cd FinancialConfig-service
+pnpm install
+pnpm run dev
+```
 
----
+Swagger:
 
-## 📚 Créditos Académicos
+```text
+http://localhost:4000/docs
+```
 
-Este microservicio fue desarrollado utilizando como base código académico proporcionado por el profesor Braulio Echeverría para el curso **IN6AM – Kinal Guatemala**.  
-El código fue adaptado y extendido por **CCTEPT** para cumplir con los requerimientos de **NovaBank**.
+### 5. Ejecutar client-admin
 
-Se respeta la licencia MIT original.
+```bash
+cd client-admin
+pnpm install
+pnpm run dev
+```
+
+Aplicacion:
+
+```text
+http://localhost:5173
+```
+
+## Endpoints principales
+
+### Authentication-service
+
+Base URL:
+
+```text
+http://localhost:5092/api/v1
+```
+
+| Metodo | Ruta | Auth | Descripcion |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | No | Registrar usuario |
+| `POST` | `/auth/login` | No | Iniciar sesion y obtener JWT |
+| `POST` | `/auth/verify-email` | No | Verificar email |
+| `POST` | `/auth/resend-verification` | No | Reenviar codigo de verificacion |
+| `POST` | `/auth/forgot-password` | No | Solicitar recuperacion de contrasena |
+| `POST` | `/auth/reset-password` | No | Resetear contrasena |
+| `GET` | `/auth/profile` | Si | Obtener perfil autenticado |
+| `POST` | `/auth/profile/by-id` | No | Obtener perfil por ID |
+| `PATCH` | `/user/{userId}/role` | Si | Actualizar rol de usuario |
+| `GET` | `/user/{userId}/roles` | Si | Obtener roles de usuario |
+| `GET` | `/user/by-role/{roleName}` | Si | Listar usuarios por rol |
+| `GET` | `/health` | No | Estado del servicio |
+
+### Bank-service
+
+Base URL:
+
+```text
+http://localhost:3000/api
+```
+
+| Metodo | Ruta | Auth | Descripcion |
+| --- | --- | --- | --- |
+| `POST` | `/accounts` | Si | Crear cuenta bancaria |
+| `GET` | `/accounts` | Si | Listar cuentas |
+| `GET` | `/accounts/{idCuenta}` | Si | Obtener cuenta por ID |
+| `POST` | `/movements/deposit` | Si | Depositar |
+| `POST` | `/movements/withdraw` | Si | Retirar |
+| `POST` | `/movements/transfer` | Si | Transferir |
+| `GET` | `/movements/history` | Si | Historial del usuario |
+| `GET` | `/movements/history/{accountId}` | Si | Historial por cuenta |
+| `GET` | `/checks` | Si | Listar cheques |
+| `POST` | `/checks` | Si | Emitir cheque |
+| `POST` | `/checks/cash` | Si | Cobrar cheque por numero |
+| `POST` | `/checks/{id}/cash` | Si | Cobrar cheque por ID |
+
+### FinancialConfig-service
+
+Base URL:
+
+```text
+http://localhost:4000/api
+```
+
+| Metodo | Ruta | Auth | Descripcion |
+| --- | --- | --- | --- |
+| `POST` | `/account-types` | Si | Crear tipo de cuenta |
+| `GET` | `/account-types` | No | Listar tipos de cuenta |
+| `GET` | `/account-types/{id}` | No | Obtener tipo de cuenta |
+| `PUT` | `/account-types/{id}` | Si | Actualizar tipo de cuenta |
+| `DELETE` | `/account-types/{id}` | Si | Eliminar tipo de cuenta |
+| `POST` | `/currencies` | Si | Crear moneda |
+| `GET` | `/currencies` | No | Listar monedas |
+| `GET` | `/currencies/{code}` | No | Obtener moneda por codigo |
+| `PUT` | `/currencies/{code}` | Si | Actualizar moneda |
+| `DELETE` | `/currencies/{code}` | Si | Eliminar moneda |
+| `POST` | `/exchange/rate` | Si | Crear o actualizar tasa |
+| `GET` | `/exchange/rate/{from}/{to}` | No | Obtener tasa |
+| `POST` | `/exchange/convert` | No | Convertir moneda |
+| `GET` | `/exchange/rates` | No | Listar tasas |
+
+## Roles
+
+Roles usados por el sistema:
+
+- `ADMIN_ROLE`
+- `EMPLOYEE_ROLE`
+- `USER_ROLE`
+- `CLIENT_ROLE`
+
+Algunas rutas validan permisos por rol. Por ejemplo:
+
+- Gestion de usuarios: administradores.
+- Retiros y transferencias: usuarios.
+- Depositos, cuentas y cheques: usuarios, empleados o administradores segun la ruta.
+
+## Swagger
+
+| Servicio | URL |
+| --- | --- |
+| Authentication-service | `http://localhost:5092/swagger` |
+| Bank-service | `http://localhost:3000/docs` |
+| FinancialConfig-service | `http://localhost:4000/docs` |
+
+Para probar endpoints protegidos en Swagger, usar:
+
+```text
+Bearer <token>
+```
+
+## Credenciales iniciales
+
+El `DataSeeder` del servicio de autenticacion crea datos iniciales automaticamente.
+
+Credenciales de administrador usadas por el seed:
+
+```text
+Email: admin@local.com
+Name: admin
+Password: admin
+```
+
+## Comandos utiles
+
+Compilar autenticacion:
+
+```bash
+dotnet build Authentication-service/auth-service/src/AuthService.Api/AuthService.Api.csproj
+```
+
+Ejecutar frontend en modo desarrollo:
+
+```bash
+cd client-admin
+pnpm run dev
+```
+
+Construir frontend:
+
+```bash
+cd client-admin
+pnpm run build
+```
+
+Ejecutar lint del frontend:
+
+```bash
+cd client-admin
+pnpm run lint
+```
+
+Ejecutar servicios Node en produccion local:
+
+```bash
+pnpm run start
+```
+
+## Notas de seguridad
+
+- Mantener `.env` fuera de Git.
+- No publicar secretos reales de JWT, SMTP o Cloudinary.
+- Usar claves JWT iguales entre servicios solo si deben validar el mismo token.
+- En produccion, mover credenciales a variables de entorno o un secret manager.
+- Revisar CORS antes de desplegar.
+
+## Creditos
+
+Proyecto academico desarrollado para IN6AM - Kinal Guatemala.
+
+Base academica proporcionada por el profesor Braulio Echeverria y adaptada por CCTEPT para los requerimientos de NovaBank.
+
+Licencia: MIT.
