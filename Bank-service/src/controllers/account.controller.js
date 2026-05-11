@@ -3,6 +3,17 @@ import accountService from "../services/account.service.js";
 
 async function createAccount(request, reply) {
     try {
+        const token = request.token || request.headers.authorization?.replace(/^Bearer\s+/i, '');
+        if (!token) {
+            return reply.code(401).send({ error: 'Token faltante' });
+        }
+
+        const profile = await authClient.getProfile(token);
+        if (!profile?.isEmailVerified) {
+            return reply.code(403).send({
+                error: 'Debes verificar tu correo antes de crear una cuenta bancaria'
+            });
+        }
 
         const idUsuario = request.user.sub;
 
@@ -25,10 +36,18 @@ async function createAccount(request, reply) {
 }
 
 async function getAccounts(request, reply) {
+    if (request.user.role === "USER_ROLE") {
+        const userAccounts = await accountService.getAccountsByUser(request.user.sub);
+        return {
+            message: "Listado de cuentas del usuario",
+            accounts: userAccounts
+        };
+    }
+
     return {
         message: "Listado de Cuentas",
         accounts: await accountService.getAccounts()
-    }
+    };
 }
 
 

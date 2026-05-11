@@ -33,6 +33,10 @@ pnpm-debug.log*
 *.sln
 *.swp
 
+# --- Archivos de Configuración Local ---
+keys/
+*.xml
+
 # --- Sistema Operativo ---
 .DS_Store
 Thumbs.db

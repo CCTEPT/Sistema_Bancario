@@ -24,10 +24,10 @@ export const resetPassword = async (token, newPassword) =>{
     return await axiosAuth.post('/Auth/reset-password', { token, newPassword })
 }
 
-/*export const getAllUsers = async () => {
-    const { data } = await axiosAuth.get('/Auth/profile');
+export const getAllUsers = async () => {
+    const { data } = await axiosAuth.get('/User');
     return { users: data} ;
-}*/
+}
 
 export const getProfile = async () => {
     const { data } = await axiosAuth.get('/Auth/profile');

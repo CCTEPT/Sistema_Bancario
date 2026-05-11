@@ -102,3 +102,22 @@ export const cashCheckSchema = {
     }
   }
 }
+
+export const cashCheckByNumberSchema = {
+  description: 'Cobrar/Depositar un cheque por numero',
+  body: {
+    type: 'object',
+    required: ['checkNumber', 'receivingAccountId'],
+    properties: {
+      checkNumber: {
+        type: 'string',
+        description: 'Numero del cheque a cobrar'
+      },
+      receivingAccountId: {
+        type: 'string',
+        description: 'ID de la cuenta receptora del cheque'
+      }
+    }
+  },
+  response: cashCheckSchema.response
+}

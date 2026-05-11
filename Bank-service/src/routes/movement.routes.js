@@ -4,7 +4,8 @@ import {
     depositController,
     withdrawController,
     transferController,
-    historyController
+    historyController,
+    userHistoryController
 } from '../controllers/movement.controller.js'
 import {
     depositSchema,
@@ -15,7 +16,7 @@ import {
 
 export default async function movementRoutes(fastify, options) {
     fastify.post('/deposit', {
-        preHandler: [authMiddleware, authorizeRole('EMPLOYEE')],
+        preHandler: [authMiddleware, authorizeRole('USER_ROLE', 'EMPLOYEE_ROLE', 'ADMIN_ROLE')],
         schema: {
             ...depositSchema,
             tags: ['Movements'],
@@ -24,7 +25,7 @@ export default async function movementRoutes(fastify, options) {
     }, depositController)
 
     fastify.post('/withdraw', {
-        preHandler: [authMiddleware, authorizeRole('CLIENT')],
+        preHandler: [authMiddleware, authorizeRole('USER_ROLE')],
         schema: {
             ...withdrawSchema,
             tags: ['Movements'],
@@ -33,13 +34,21 @@ export default async function movementRoutes(fastify, options) {
     }, withdrawController)
 
     fastify.post('/transfer', {
-        preHandler: [authMiddleware, authorizeRole('CLIENT')],
+        preHandler: [authMiddleware, authorizeRole('USER_ROLE')],
         schema: {
             ...transferSchema,
             tags: ['Movements'],
             security: [{ bearerAuth: [] }]
         }
     }, transferController)
+
+    fastify.get('/history', {
+        preHandler: [authMiddleware],
+        schema: {
+            tags: ['Movements'],
+            security: [{ bearerAuth: [] }]
+        }
+    }, userHistoryController)
 
     fastify.get('/history/:accountId', {
         preHandler: [authMiddleware],

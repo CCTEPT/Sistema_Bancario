@@ -30,13 +30,21 @@ const checkSchema = new mongoose.Schema(
             default: Date.now,
             required: true
         },
+        expiryDate: {
+            type: Date,
+            required: true
+        },
         cashDate: {
             type: Date,
             default: null
         },
-        issuerUser: {
+        receivingAccount: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Account",
+            default: null
+        },
+        issuerUser: {
+            type: String,
             required: true
         }
     },
