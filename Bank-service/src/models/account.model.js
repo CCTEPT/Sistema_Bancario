@@ -26,8 +26,7 @@ const accountSchema = new mongoose.Schema({
 
   divisa: {
     type: String,
-    required: true,
-    enum: ['GTQ', 'USD', 'EUR']
+    required: true
   },
 
   idUsuario: {
