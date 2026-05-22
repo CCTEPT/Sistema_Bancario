@@ -11,9 +11,8 @@ export const createAccountSchema = {
       },
       divisa: {
         type: 'string',
-        enum: ['GTQ', 'USD', 'EUR'],
-        default: 'GTQ',
-        description: 'Moneda de la cuenta (Quetzales, Dólares, Euros)'
+        description: 'Código de la moneda (debe existir en FinancialConfig)',
+        default: 'GTQ'
       }
     }
   },
