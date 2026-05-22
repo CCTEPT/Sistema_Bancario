@@ -1,5 +1,18 @@
 import Account from "../models/account.model.js";
 import { randomUUID } from "crypto";
+import axios from "axios";
+
+const FINANCIAL_CONFIG_URL = process.env.FINANCIAL_CONFIG_URL || "http://localhost:4000/api";
+
+async function getValidCurrencyCodes() {
+    try {
+        const { data } = await axios.get(`${FINANCIAL_CONFIG_URL}/currencies`);
+        return data.map((c) => c.code.toUpperCase());
+    } catch {
+        // Si FinancialConfig no responde, permitir las monedas base como fallback
+        return ["GTQ", "USD", "EUR"];
+    }
+}
 
 class AccountService {
 
@@ -16,17 +29,27 @@ class AccountService {
     // Crear cuenta bancaria
     async createAccount({ idUsuario, tipoCuenta, divisa }) {
 
+        // Validar que la divisa existe en FinancialConfig
+        const validCodes = await getValidCurrencyCodes();
+        const divisaUpper = (divisa || "GTQ").toUpperCase();
+
+        if (!validCodes.includes(divisaUpper)) {
+            throw new Error(
+                `La divisa '${divisaUpper}' no está configurada. Divisas disponibles: ${validCodes.join(", ")}`
+            );
+        }
+
         // Verificar si ya tiene una cuenta del mismo tipo y divisa
         const existingAccount = await Account.findOne({
             idUsuario,
             tipoCuenta,
-            divisa,
+            divisa: divisaUpper,
             estado: "ACTIVE"
         });
 
         if (existingAccount) {
             throw new Error(
-                `El usuario ya tiene una cuenta ${tipoCuenta} en ${divisa}`
+                `El usuario ya tiene una cuenta ${tipoCuenta} en ${divisaUpper}`
             );
         }
 
@@ -47,7 +70,7 @@ class AccountService {
             numeroCuenta,
             saldo: 0,
             tipoCuenta,
-            divisa,
+            divisa: divisaUpper,
             idUsuario,
             estado: "ACTIVE"
         });
