@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowRightLeft, TrendingUp } from "lucide-react";
+import { Loader2, ArrowRightLeft, TrendingUp, Wallet } from "lucide-react";
 import { convertCurrency, getCurrencies, getExchangeRates } from "@/shared/apis/financial";
+import { getUserAccounts } from "@/shared/apis/bank";
 
 const FALLBACK_CURRENCIES = [
   { code: "GTQ", name: "Quetzal guatemalteco", symbol: "Q" },
@@ -16,6 +17,7 @@ const FALLBACK_CURRENCIES = [
 export default function Convert() {
   const [currencies, setCurrencies] = useState([]);
   const [rates, setRates] = useState([]);
+  const [userAccounts, setUserAccounts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
 
@@ -72,9 +74,10 @@ export default function Convert() {
     const loadFinancialConfig = async () => {
       try {
         setIsLoading(true);
-        const [currencyResponse, rateResponse] = await Promise.all([
+        const [currencyResponse, rateResponse, accountsResponse] = await Promise.all([
           getCurrencies(),
           getExchangeRates(),
+          getUserAccounts().catch(() => ({ accounts: [] })),
         ]);
 
         const loadedCurrencies = (currencyResponse || []).map((currency) => ({
@@ -85,6 +88,7 @@ export default function Convert() {
 
         setCurrencies(loadedCurrencies);
         setRates(rateResponse || []);
+        setUserAccounts(accountsResponse?.accounts || []);
 
         const defaultFrom = loadedCurrencies.find((currency) => currency.code === "USD")?.code || loadedCurrencies[0]?.code || "USD";
         const defaultTo = loadedCurrencies.find((currency) => currency.code === "GTQ")?.code || loadedCurrencies[1]?.code || defaultFrom;
@@ -322,6 +326,51 @@ export default function Convert() {
           </CardContent>
         </Card>
       )}
+      {userAccounts.length > 0 && (() => {
+        // Agrupar saldos por divisa
+        const balancesByDivisa = userAccounts.reduce((acc, account) => {
+          const code = account.divisa?.toUpperCase();
+          if (!code) return acc;
+          if (!acc[code]) acc[code] = 0;
+          acc[code] += account.saldo || 0;
+          return acc;
+        }, {});
+
+        return (
+          <Card className="bg-card/50 backdrop-blur border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Wallet className="h-4 w-4" />
+                Tus divisas
+              </CardTitle>
+              <CardDescription>Saldo total por moneda en tus cuentas activas.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.entries(balancesByDivisa).map(([code, saldo]) => {
+                  const currencyInfo = availableCurrencies.find((c) => c.code === code);
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      className="text-left p-3 rounded-md bg-background/30 border border-border/50 hover:border-primary/30 transition-colors"
+                      onClick={() => setFromCurrency(code)}
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        {currencyInfo?.symbol || code} {code}
+                      </p>
+                      <p className="text-lg font-bold font-mono text-primary">
+                        {saldo.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{currencyInfo?.name || code}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
