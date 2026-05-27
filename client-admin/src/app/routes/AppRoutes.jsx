@@ -18,7 +18,12 @@ import TransferPage from '@/features/transfer/pages/TransferPage.jsx'
 import ConvertPage from '@/features/convert/pages/ConvertPage.jsx'
 import TransactionPage from '@/features/transactions/pages/TransactionPage.jsx'
 import CheckPage from '@/features/check/pages/CheckPage'
-
+import EmployeeDashboardPage from '@/features/employee/pages/EmployeeDashboardPage.jsx'
+import ClientsPage from '@/features/employee/pages/ClientsPage.jsx'
+import CreateAccountPage from '@/features/employee/pages/CreateAccountPage.jsx'
+import LoansPage from '@/features/employee/pages/LoansPage.jsx'
+import ClientHistoryPage from '@/features/employee/pages/ClientHistoryPage.jsx'
+import TransactionSupportPage from '@/features/employee/pages/TransactionSupportPage.jsx'
 
 export const AppRoutes = () => {
   return (
@@ -28,7 +33,6 @@ export const AppRoutes = () => {
       <Route path="/register" element={<RegisterForm />} />
       <Route path='/unauthorized' element={<UnauthorizedPage />} />
       <Route path='/verify-email' element={<VerifyEmailPage />} />
-
       <Route path='/forgot-password' element={<ForgotPass />} />
       <Route path='/reset-password' element={<ForgotPassPage />} />
 
@@ -38,17 +42,47 @@ export const AppRoutes = () => {
           <ProtectedRoutes>
             <RoleGuard allowedRoles={["ADMIN_ROLE", "USER_ROLE", "EMPLOYEE_ROLE"]}>
               <MainLayout>
-                {/* Aquí definimos qué contenido cambia según la URL */}
                 <Routes>
                   <Route index element={<DashboardPage />} />
                   <Route path='accounts' element={<Accounts />} />
-                  <Route path='checks' element={<CheckPage />} />  
+                  <Route path='checks' element={<CheckPage />} />
                   <Route path='transactions' element={<TransactionPage />} />
                   <Route path='users' element={<UserPage />} />
                   <Route path='deposit' element={<DepositPage />} />
                   <Route path='withdraw' element={<WithdrawPage />} />
                   <Route path='transfer' element={<TransferPage />} />
                   <Route path='convert' element={<ConvertPage />} />
+
+                  <Route path='employee' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <EmployeeDashboardPage />
+                    </RoleGuard>
+                  } />
+                  <Route path='employee/clients' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <ClientsPage />
+                    </RoleGuard>
+                  } />
+                  <Route path='employee/clients/:clientId' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <ClientHistoryPage />
+                    </RoleGuard>
+                  } />
+                  <Route path='employee/create-account' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <CreateAccountPage />
+                    </RoleGuard>
+                  } />
+                  <Route path='employee/loans' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <LoansPage />
+                    </RoleGuard>
+                  } />
+                  <Route path='employee/transactions' element={
+                    <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>
+                      <TransactionSupportPage />
+                    </RoleGuard>
+                  } />
                 </Routes>
               </MainLayout>
             </RoleGuard>

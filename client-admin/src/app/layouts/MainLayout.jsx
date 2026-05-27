@@ -1,31 +1,52 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  ArrowRightLeft,
-  Banknote,
-  DollarSign,
-  History,
-  LayoutDashboard,
-  Loader2,
-  LogOut,
-  Menu,
-  MinusCircle,
-  PlusCircle,
-  X,
+  ArrowRightLeft, Banknote, DollarSign, History,
+  LayoutDashboard, Loader2, LogOut, Menu, MinusCircle,
+  PlusCircle, X, Users, CreditCard, ClipboardList,
+  UserCog, ShieldCheck,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/features/auth/store/authStore.js";
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Transactions", href: "/dashboard/transactions", icon: History },
-  { label: "Transfer", href: "/dashboard/transfer", icon: ArrowRightLeft },
-  { label: "Deposit", href: "/dashboard/deposit", icon: PlusCircle },
-  { label: "Withdraw", href: "/dashboard/withdraw", icon: MinusCircle },
-  { label: "Convert", href: "/dashboard/convert", icon: DollarSign },
-  { label: "Checks", href: "/dashboard/checks", icon: Banknote },
-];
+const NAV_BY_ROLE = {
+  USER_ROLE: [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Mis cuentas", href: "/dashboard/accounts", icon: CreditCard },
+    { label: "Transacciones", href: "/dashboard/transactions", icon: History },
+    { label: "Transferir", href: "/dashboard/transfer", icon: ArrowRightLeft },
+    { label: "Depositar", href: "/dashboard/deposit", icon: PlusCircle },
+    { label: "Retirar", href: "/dashboard/withdraw", icon: MinusCircle },
+    { label: "Convertir", href: "/dashboard/convert", icon: DollarSign },
+    { label: "Cheques", href: "/dashboard/checks", icon: Banknote },
+  ],
+  EMPLOYEE_ROLE: [
+    { label: "Panel empleado", href: "/dashboard/employee", icon: LayoutDashboard, exact: true },
+    { label: "Clientes", href: "/dashboard/employee/clients", icon: Users },
+    { label: "Abrir cuenta", href: "/dashboard/employee/create-account", icon: CreditCard },
+    { label: "Préstamos", href: "/dashboard/employee/loans", icon: ClipboardList },
+    { label: "Historial / Soporte", href: "/dashboard/employee/transactions", icon: History },
+  ],
+  ADMIN_ROLE: [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Cuentas", href: "/dashboard/accounts", icon: CreditCard },
+    { label: "Cheques", href: "/dashboard/checks", icon: Banknote },
+    { label: "Movimientos", href: "/dashboard/transactions", icon: History },
+    { label: "Usuarios", href: "/dashboard/users", icon: ShieldCheck },
+    { divider: true, label: "Operaciones" },
+    { label: "Depositar", href: "/dashboard/deposit", icon: PlusCircle },
+    { label: "Retirar", href: "/dashboard/withdraw", icon: MinusCircle },
+    { label: "Transferir", href: "/dashboard/transfer", icon: ArrowRightLeft },
+    { label: "Convertir", href: "/dashboard/convert", icon: DollarSign },
+    { divider: true, label: "Empleado" },
+    { label: "Panel empleado", href: "/dashboard/employee", icon: UserCog, exact: true },
+    { label: "Clientes", href: "/dashboard/employee/clients", icon: Users },
+    { label: "Abrir cuenta", href: "/dashboard/employee/create-account", icon: CreditCard },
+    { label: "Préstamos", href: "/dashboard/employee/loans", icon: ClipboardList },
+    { label: "Soporte transacciones", href: "/dashboard/employee/transactions", icon: ArrowRightLeft },
+  ],
+};
 
 export function MainLayout({ children }) {
   const location = useLocation();
@@ -38,11 +59,16 @@ export function MainLayout({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoadingAuth);
 
+  const role = user?.role || "USER_ROLE";
+  const navItems = NAV_BY_ROLE[role] || NAV_BY_ROLE.USER_ROLE;
+
   const firstName = user?.name || user?.Name || "";
   const surname = user?.surname || user?.Surname || "";
   const username = user?.username || user?.Username || "";
   const email = user?.email || user?.Email || "";
   const displayName = `${firstName} ${surname}`.trim() || username || email || "Usuario";
+
+  const roleLabel = { USER_ROLE: "Cliente", EMPLOYEE_ROLE: "Empleado", ADMIN_ROLE: "Administrador" }[role] || role;
 
   useEffect(() => {
     if (!isAuthenticated && currentPath !== "/login" && currentPath !== "/register") {
@@ -60,8 +86,19 @@ export function MainLayout({ children }) {
   }
 
   const renderNavItem = (item, closeOnClick = false) => {
+    if (item.divider) {
+      return (
+        <div key={item.label} className="pt-3 pb-1 px-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/50 font-medium">{item.label}</p>
+        </div>
+      );
+    }
+
     const Icon = item.icon;
-    const isActive = currentPath === item.href || (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+    const isActive = item.exact
+      ? currentPath === item.href
+      : currentPath === item.href || (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+
     const itemLink = (
       <Link
         key={item.href}
@@ -72,7 +109,7 @@ export function MainLayout({ children }) {
             : "text-muted-foreground hover:bg-secondary hover:text-foreground"
         }`}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-4 w-4 shrink-0" />
         {item.label}
       </Link>
     );
@@ -88,9 +125,9 @@ export function MainLayout({ children }) {
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-sm font-medium">{displayName}</span>
-        <span className="truncate text-xs text-muted-foreground">{email || "Sin correo"}</span>
+        <span className="truncate text-xs text-muted-foreground">{roleLabel}</span>
       </div>
-      <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar sesion">
+      <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar sesión">
         <LogOut className="h-4 w-4" />
       </Button>
     </div>
@@ -108,8 +145,12 @@ export function MainLayout({ children }) {
           </Link>
         </div>
 
-        <nav className="flex-1 space-y-1 px-4">
-          {navItems.map((item) => renderNavItem(item))}
+        <nav className="flex-1 space-y-0.5 px-4 overflow-y-auto">
+          {navItems.map((item, i) => (
+            <div key={item.href || `divider-${i}`}>
+              {renderNavItem(item)}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-border p-4">
@@ -162,8 +203,12 @@ export function MainLayout({ children }) {
                 </Button>
               </div>
 
-              <nav className="flex-1 space-y-1 px-4 py-4">
-                {navItems.map((item) => renderNavItem(item, true))}
+              <nav className="flex-1 space-y-0.5 px-4 py-4 overflow-y-auto">
+                {navItems.map((item, i) => (
+                  <div key={item.href || `divider-${i}`}>
+                    {renderNavItem(item, true)}
+                  </div>
+                ))}
               </nav>
 
               <div className="border-t border-border p-4">

@@ -38,7 +38,3 @@ export const App = () => {
     </>
   )
 };
-
-
-
-
