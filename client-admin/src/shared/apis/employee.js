@@ -11,8 +11,10 @@ export async function getClientById(userId) {
 }
 
 export async function getClientAccounts(userId) {
-  const { data } = await axiosBank.get(`/accounts/user/${userId}`);
-  return { accounts: data.accounts || [] };
+  const { data } = await axiosBank.get('/accounts/manage');
+  const all = data.accounts || (Array.isArray(data) ? data : []);
+  const filtered = all.filter(a => a.idUsuario === userId);
+  return { accounts: filtered };
 }
 
 export async function createAccountForClient({ idUsuario, numeroCuenta, tipoCuenta, divisa }) {
@@ -29,7 +31,8 @@ export async function getClientMovements(accountId, { limit = 50, skip = 0 } = {
   const { data } = await axiosBank.get(`/movements/history/${accountId}`, {
     params: { limit, skip },
   });
-  return data;
+  const movements = data.data || data.movements || (Array.isArray(data) ? data : []);
+  return { movements };
 }
 
 export async function getAllMovements({ limit = 100, skip = 0, search = '' } = {}) {

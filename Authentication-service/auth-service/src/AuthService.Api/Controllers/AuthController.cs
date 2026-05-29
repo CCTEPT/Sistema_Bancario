@@ -319,4 +319,42 @@ public class AuthController(IAuthService authService) : ControllerBase
         var result = await authService.ResetPasswordAsync(resetPasswordDto);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Actualizar perfil del usuario autenticado
+    /// </summary>
+    /// <param name="updateProfileDto">Nuevos datos del perfil (nombre, apellido, username, teléfono, foto)</param>
+    /// <returns>Datos actualizados del perfil — mismo shape que RegisterResponseDto</returns>
+    /// <remarks>
+    /// Requiere token JWT válido. Permite actualizar nombre, apellido, username,
+    /// teléfono y foto de perfil. La foto se sube a Cloudinary.
+    /// No permite cambiar email ni contraseña desde este endpoint.
+    /// Máximo 10MB en el request.
+    /// </remarks>
+    /// <response code="200">Perfil actualizado — devuelve RegisterResponseDto con UserResponseDto</response>
+    /// <response code="400">Datos inválidos o username ya existe</response>
+    /// <response code="401">No autorizado - Token inválido o expirado</response>
+    /// <response code="404">Usuario no encontrado</response>
+    /// <response code="500">Error al procesar la solicitud</response>
+    [HttpPatch("profile")]
+    [Authorize]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [EnableRateLimiting("ApiPolicy")]
+    [ProducesResponseType(typeof(RegisterResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<RegisterResponseDto>> UpdateProfile([FromForm] UpdateProfileDto updateProfileDto)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c =>
+            c.Type == "sub" ||
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+
+        if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
+            return Unauthorized();
+
+        var result = await authService.UpdateProfileAsync(userIdClaim.Value, updateProfileDto);
+        return Ok(result);
+    }
 }

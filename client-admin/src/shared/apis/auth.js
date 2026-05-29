@@ -1,5 +1,7 @@
 import { axiosAuth } from './api.js';
 
+const MANAGEABLE_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE', 'USER_ROLE'];
+
 //funcion para iniciar sesion, la consume
 //se obtiene la respuesta, hace la peticion
 export const login = async (data) => {
@@ -25,8 +27,22 @@ export const resetPassword = async (token, newPassword) =>{
 }
 
 export const getAllUsers = async () => {
-    const { data } = await axiosAuth.get('/User');
-    return { users: data} ;
+    const results = await Promise.allSettled(
+        MANAGEABLE_ROLES.map((roleName) => axiosAuth.get(`/User/by-role/${roleName}`))
+    );
+
+    const fulfilled = results.filter((result) => result.status === 'fulfilled');
+    if (fulfilled.length === 0) {
+        const firstError = results.find((result) => result.status === 'rejected')?.reason;
+        throw firstError;
+    }
+
+    const users = fulfilled.flatMap((result) => {
+        const data = result.value.data;
+        return Array.isArray(data) ? data : data?.users || [];
+    });
+
+    return { users };
 }
 
 export const getProfile = async () => {
@@ -40,6 +56,11 @@ export const updateUserRole = async (userId, roleName) => {
     return data;
 };
 
+export const updateUserStatus = async (userId, status) => {
+    const { data } = await axiosAuth.patch(`/User/${userId}/status`, { status });
+    return data;
+};
+
 export const getUserRoles = async (userId) => {
     const { data } = await axiosAuth.get(`/User/${userId}/roles`);
     return { users: data} ;
@@ -49,3 +70,14 @@ export const getUsersByRole = async (roleName) => {
     const { data } = await axiosAuth.get(`/User/by-role/${roleName}`);
     return { users: data} ;
 }
+
+export const getUserProfile = async () => {
+  const { data } = await axiosAuth.get('/Auth/profile');
+  return data;
+};
+
+export const updateProfile = async (formData) => {
+  return await axiosAuth.patch('/Auth/profile', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

@@ -24,6 +24,8 @@ import CreateAccountPage from '@/features/employee/pages/CreateAccountPage.jsx'
 import LoansPage from '@/features/employee/pages/LoansPage.jsx'
 import ClientHistoryPage from '@/features/employee/pages/ClientHistoryPage.jsx'
 import TransactionSupportPage from '@/features/employee/pages/TransactionSupportPage.jsx'
+import LoanRequestPage from '@/features/loan/pages/LoansPage.jsx'
+
 
 export const AppRoutes = () => {
   return (
@@ -47,11 +49,16 @@ export const AppRoutes = () => {
                   <Route path='accounts' element={<Accounts />} />
                   <Route path='checks' element={<CheckPage />} />
                   <Route path='transactions' element={<TransactionPage />} />
-                  <Route path='users' element={<UserPage />} />
+                  <Route path='users' element={
+                    <RoleGuard allowedRoles={["ADMIN_ROLE", "EMPLOYEE_ROLE"]}>
+                      <UserPage />
+                    </RoleGuard>
+                  } />
                   <Route path='deposit' element={<DepositPage />} />
                   <Route path='withdraw' element={<WithdrawPage />} />
                   <Route path='transfer' element={<TransferPage />} />
                   <Route path='convert' element={<ConvertPage />} />
+                  <Route path= 'loans' element={<LoanRequestPage />} />
 
                   <Route path='employee' element={
                     <RoleGuard allowedRoles={["EMPLOYEE_ROLE", "ADMIN_ROLE"]}>

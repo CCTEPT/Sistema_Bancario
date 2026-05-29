@@ -8,6 +8,25 @@ namespace AuthService.Application.Services;
 
 public class UserManagementService(IUserRepository users, IRoleRepository roles, ICloudinaryService cloudinary) : IUserManagementService
 {
+    private UserResponseDto MapToResponse(User user, string? roleName = null)
+    {
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Surname = user.Surname,
+            Username = user.Username,
+            Email = user.Email,
+            ProfilePicture = cloudinary.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
+            Phone = user.UserProfile?.Phone ?? string.Empty,
+            Role = roleName ?? user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE,
+            Status = user.Status,
+            IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+    }
+
     public async Task<UserResponseDto> UpdateUserRoleAsync(string userId, string roleName)
     {
         // Normalize
@@ -43,22 +62,19 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
         // Reload user with updated roles
         user = await users.GetByIdAsync(userId);
 
-        // Map to response
-        return new UserResponseDto
-        {
-            Id = user.Id,
-            Name = user.Name,
-            Surname = user.Surname,
-            Username = user.Username,
-            Email = user.Email,
-            ProfilePicture = cloudinary.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = user.UserProfile?.Phone ?? string.Empty,
-            Role = role.Name,
-            Status = user.Status,
-            IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
-        };
+        return MapToResponse(user, role.Name);
+    }
+
+    public async Task<UserResponseDto> UpdateUserStatusAsync(string userId, bool status)
+    {
+        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("Invalid userId", nameof(userId));
+
+        var user = await users.GetByIdAsync(userId);
+        user.Status = status;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        user = await users.UpdateAsync(user);
+        return MapToResponse(user);
     }
 
     public async Task<IReadOnlyList<string>> GetUserRolesAsync(string userId)
@@ -71,20 +87,6 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
     {
         roleName = roleName?.Trim().ToUpperInvariant() ?? string.Empty;
         var usersInRole = await roles.GetUsersByRoleAsync(roleName);
-        return usersInRole.Select(u => new UserResponseDto
-        {
-            Id = u.Id,
-            Name = u.Name,
-            Surname = u.Surname,
-            Username = u.Username,
-            Email = u.Email,
-            ProfilePicture = cloudinary.GetFullImageUrl(u.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = u.UserProfile?.Phone ?? string.Empty,
-            Role = roleName,
-            Status = u.Status,
-            IsEmailVerified = u.UserEmail?.EmailVerified ?? false,
-            CreatedAt = u.CreatedAt,
-            UpdatedAt = u.UpdatedAt
-        }).ToList();
+        return usersInRole.Select(u => MapToResponse(u, roleName)).ToList();
     }
 }

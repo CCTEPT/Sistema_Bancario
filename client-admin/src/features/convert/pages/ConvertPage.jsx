@@ -11,13 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, ArrowRightLeft, TrendingUp, Wallet } from 'lucide-react';
-import { convertCurrency, getCurrencies, getExchangeRates } from '@/shared/apis/financial';
+import { convertCurrency, getCurrencies, getExchangeRates, setExchangeRate } from '@/shared/apis/financial';
 import { getUserAccounts } from '@/shared/apis/bank';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 const FALLBACK_CURRENCIES = [
   { code: 'GTQ', name: 'Quetzal guatemalteco', symbol: 'Q' },
   { code: 'USD', name: 'Dolar estadounidense', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: 'EUR' },
+];
+
+const RATE_CURRENCIES = [
+  { code: 'USD', name: 'Dólar estadounidense', symbol: '$' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'GTQ', name: 'Quetzal (QTLZ)', symbol: 'Q' },
 ];
 
 export default function Convert() {
@@ -30,8 +37,15 @@ export default function Convert() {
   const [fromCurrency, setFromCurrency] = useState('');
   const [toCurrency, setToCurrency] = useState('');
   const [amount, setAmount] = useState('100');
+  const [rateFromCurrency, setRateFromCurrency] = useState('USD');
+  const [rateToCurrency, setRateToCurrency] = useState('GTQ');
+  const [rate, setRate] = useState('');
+  const [isSavingRate, setIsSavingRate] = useState(false);
   const [result, setResult] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
+
+  const user = useAuthStore((state) => state.user);
+  const canManageRates = user?.role === 'ADMIN_ROLE' || user?.role === 'EMPLOYEE_ROLE';
 
   const availableCurrencies = currencies.length > 0 ? currencies : FALLBACK_CURRENCIES;
 
@@ -75,6 +89,18 @@ export default function Convert() {
 
     return null;
   };
+
+  const selectedRate = useMemo(() => {
+    return rates.find(
+      (rateItem) => rateItem.from === rateFromCurrency && rateItem.to === rateToCurrency
+    );
+  }, [rates, rateFromCurrency, rateToCurrency]);
+
+  useEffect(() => {
+    if (canManageRates) {
+      setRate(selectedRate?.rate?.toString() || '');
+    }
+  }, [selectedRate, canManageRates]);
 
   useEffect(() => {
     const loadFinancialConfig = async () => {
@@ -128,6 +154,44 @@ export default function Convert() {
     setResult(null);
   }, [fromCurrency, toCurrency, amount]);
 
+  const handleSaveRate = async () => {
+    if (!rateFromCurrency || !rateToCurrency) {
+      showToast('Monedas inválidas', 'Selecciona monedas origen y destino para la tasa.', 'destructive');
+      return;
+    }
+
+    const numRate = parseFloat(rate);
+    if (Number.isNaN(numRate) || numRate <= 0) {
+      showToast('Tasa inválida', 'Ingresa una tasa mayor a 0.', 'destructive');
+      return;
+    }
+
+    if (rateFromCurrency === rateToCurrency) {
+      showToast('Monedas iguales', 'Selecciona monedas diferentes para la tasa.', 'destructive');
+      return;
+    }
+
+    setIsSavingRate(true);
+    try {
+      await setExchangeRate({ from: rateFromCurrency, to: rateToCurrency, rate: numRate });
+      const rateResponse = await getExchangeRates();
+      setRates(rateResponse || []);
+      showToast(
+        'Tasa guardada',
+        `Tasa ${rateFromCurrency} → ${rateToCurrency} actualizada.`,
+        'default'
+      );
+    } catch (error) {
+      showToast(
+        'No se pudo guardar la tasa',
+        error.response?.data?.error || error.message || 'Verifica que tengas permiso para editar tasas.',
+        'destructive'
+      );
+    } finally {
+      setIsSavingRate(false);
+    }
+  };
+
   const handleConvert = async () => {
     const numAmount = parseFloat(amount);
     if (!fromCurrency || !toCurrency || Number.isNaN(numAmount) || numAmount <= 0) {
@@ -179,12 +243,30 @@ export default function Convert() {
     }
   };
 
+  const handleRateFromCurrencyChange = (value) => {
+    setRateFromCurrency(value);
+    if (value === rateToCurrency) {
+      const fallback = RATE_CURRENCIES.find((currency) => currency.code !== value)?.code;
+      setRateToCurrency(fallback || value);
+    }
+  };
+
+  const handleRateToCurrencyChange = (value) => {
+    setRateToCurrency(value);
+    if (value === rateFromCurrency) {
+      const fallback = RATE_CURRENCIES.find((currency) => currency.code !== value)?.code;
+      setRateFromCurrency(fallback || value);
+    }
+  };
+
   const swapCurrencies = () => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
     setResult(null);
   };
 
+  const filteredRateFromOptions = RATE_CURRENCIES.filter((currency) => currency.code !== rateToCurrency);
+  const filteredRateToOptions = RATE_CURRENCIES.filter((currency) => currency.code !== rateFromCurrency);
   const topRates = rates.slice(0, 6);
 
   return (
@@ -303,60 +385,162 @@ export default function Convert() {
         </CardContent>
       </Card>
 
-      {topRates.length > 0 && (
-        <Card className='bg-card/50 backdrop-blur border-border/50'>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
-              <TrendingUp className='h-4 w-4' />
-              Tasas configuradas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
-              {topRates.map((rate) => {
-                const from = availableCurrencies.find((currency) => currency.code === rate.from);
-                const to = availableCurrencies.find((currency) => currency.code === rate.to);
-
-                return (
-                  <button
-                    key={rate._id || `${rate.from}-${rate.to}`}
-                    type='button'
-                    className='text-left flex items-center justify-between p-3 rounded-md bg-background/30 border border-border/50 hover:border-primary/30 transition-colors'
-                    onClick={() => {
-                      setFromCurrency(rate.from);
-                      setToCurrency(rate.to);
-                    }}
-                    data-testid={`rate-card-${rate.from}-${rate.to}`}
+      <Card className='bg-card/50 backdrop-blur border-border/50'>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2'>
+            <TrendingUp className='h-5 w-5 text-primary' />
+            {canManageRates ? 'Administrar tasa de cambio' : 'Tasas configuradas'}
+          </CardTitle>
+          <CardDescription>
+            {canManageRates
+              ? 'Solo admin y empleado pueden guardar o actualizar tasas.'
+              : 'Consulta todas las tasas de cambio disponibles.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-6'>
+          {canManageRates && (
+            <div className='space-y-5'>
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                <div className='space-y-2'>
+                  <Label htmlFor='rate-from'>Moneda origen</Label>
+                  <Select
+                    id='rate-from'
+                    value={rateFromCurrency}
+                    onValueChange={handleRateFromCurrencyChange}
+                    disabled={isLoading}
                   >
-                    <div>
-                      <p className='text-xs font-medium'>
-                        {rate.from} to {rate.to}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {from?.symbol || rate.from} {'->'} {to?.symbol || rate.to}
-                      </p>
-                    </div>
-                    <p className='text-sm font-mono font-bold'>{Number(rate.rate).toFixed(4)}</p>
-                  </button>
-                );
-              })}
+                    <SelectTrigger className='bg-background/50'>
+                      <SelectValue placeholder='Moneda origen' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredRateFromOptions.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.code} - {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='rate-to'>Moneda destino</Label>
+                  <Select
+                    id='rate-to'
+                    value={rateToCurrency}
+                    onValueChange={handleRateToCurrencyChange}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className='bg-background/50'>
+                      <SelectValue placeholder='Moneda destino' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredRateToOptions.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.code} - {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='rate-value'>Tasa</Label>
+                  <Input
+                    id='rate-value'
+                    type='number'
+                    step='any'
+                    min='0'
+                    value={rate}
+                    onChange={(e) => setRate(e.target.value)}
+                    placeholder='0.00'
+                    className='bg-background/50'
+                  />
+                </div>
+              </div>
+
+              <Button
+                type='button'
+                onClick={handleSaveRate}
+                disabled={
+                  isSavingRate ||
+                  !rateFromCurrency ||
+                  !rateToCurrency ||
+                  rateFromCurrency === rateToCurrency ||
+                  Number.isNaN(parseFloat(rate)) ||
+                  parseFloat(rate) <= 0
+                }
+                className='w-full font-medium'
+              >
+                {isSavingRate ? <Loader2 className='h-4 w-4 animate-spin mr-2' /> : null}
+                Guardar tasa
+              </Button>
             </div>
-            <p className='text-xs text-muted-foreground mt-3 text-center'>
-              Updated: {latestUpdate ? latestUpdate.toLocaleString() : 'Sin fecha'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          <div className='space-y-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+              <div>
+                <p className='text-sm font-medium'>Tasas configuradas</p>
+                <p className='text-xs text-muted-foreground'>Listado de tasas disponibles.</p>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                Updated: {latestUpdate ? latestUpdate.toLocaleString() : 'Sin fecha'}
+              </p>
+            </div>
+
+            {rates.length === 0 ? (
+              <div className='rounded-lg border border-dashed border-border/50 bg-background/60 p-4 text-sm text-muted-foreground'>
+                No hay tasas configuradas. Agrega una tasa para que aparezca en el listado.
+              </div>
+            ) : (
+              <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+                {topRates.map((rateItem) => {
+                  const from = availableCurrencies.find((currency) => currency.code === rateItem.from);
+                  const to = availableCurrencies.find((currency) => currency.code === rateItem.to);
+
+                  return (
+                    <button
+                      key={rateItem._id || `${rateItem.from}-${rateItem.to}`}
+                      type='button'
+                      className='text-left flex items-center justify-between p-3 rounded-md bg-background/30 border border-border/50 hover:border-primary/30 transition-colors'
+                      onClick={() => {
+                        setFromCurrency(rateItem.from);
+                        setToCurrency(rateItem.to);
+                      }}
+                      data-testid={`rate-card-${rateItem.from}-${rateItem.to}`}
+                    >
+                      <div>
+                        <p className='text-xs font-medium'>
+                          {rateItem.from} to {rateItem.to}
+                        </p>
+                        <p className='text-xs text-muted-foreground'>
+                          {from?.symbol || rateItem.from} {'->'} {to?.symbol || rateItem.to}
+                        </p>
+                      </div>
+                      <p className='text-sm font-mono font-bold'>{Number(rateItem.rate).toFixed(4)}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       {userAccounts.length > 0 &&
         (() => {
-          // Agrupar saldos por divisa
-          const balancesByDivisa = userAccounts.reduce((acc, account) => {
-            const code = account.divisa?.toUpperCase();
-            if (!code) return acc;
-            if (!acc[code]) acc[code] = 0;
-            acc[code] += account.saldo || 0;
-            return acc;
-          }, {});
+          // Solo cuentas activas, antes de agrupar y sumar por divisa
+          const balancesByDivisa = userAccounts
+            .filter((account) => {
+              const status = String(account.estado || '').toUpperCase();
+              return status === 'ACTIVE' || status === 'ACTIVA';
+            })
+            .reduce((acc, account) => {
+              const code = account.divisa?.toUpperCase();
+              if (!code) return acc;
+              if (!acc[code]) acc[code] = 0;
+              acc[code] += account.saldo || 0;
+              return acc;
+            }, {});
 
           return (
             <Card className='bg-card/50 backdrop-blur border-border/50'>

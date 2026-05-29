@@ -21,6 +21,7 @@ import {
 import { ProfileModal } from '@/features/auth/pages/ProfileModal.jsx';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/features/auth/store/authStore.js';
+import novaLogo from '@/assets/img/nova.png';
 
 const NAV_BY_ROLE = {
   USER_ROLE: [
@@ -32,9 +33,12 @@ const NAV_BY_ROLE = {
     { label: 'Retirar', href: '/dashboard/withdraw', icon: MinusCircle },
     { label: 'Convertir', href: '/dashboard/convert', icon: DollarSign },
     { label: 'Cheques', href: '/dashboard/checks', icon: Banknote },
+    { label: 'Préstamos', href: '/dashboard/loans', icon: ClipboardList },
   ],
   EMPLOYEE_ROLE: [
     { label: 'Panel empleado', href: '/dashboard/employee', icon: LayoutDashboard, exact: true },
+    { label: 'Cuentas', href: '/dashboard/accounts', icon: CreditCard },
+    { label: 'Usuarios', href: '/dashboard/users', icon: ShieldCheck },
     { label: 'Clientes', href: '/dashboard/employee/clients', icon: Users },
     { label: 'Abrir cuenta', href: '/dashboard/employee/create-account', icon: CreditCard },
     { label: 'Préstamos', href: '/dashboard/employee/loans', icon: ClipboardList },
@@ -119,17 +123,16 @@ export function MainLayout({ children }) {
     const isActive = item.exact
       ? currentPath === item.href
       : currentPath === item.href ||
-        (item.href !== '/dashboard' && currentPath.startsWith(item.href));
+      (item.href !== '/dashboard' && currentPath.startsWith(item.href));
 
     const itemLink = (
       <Link
         key={item.href}
         to={item.href}
-        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-        }`}
+        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive
+          ? 'bg-primary/10 text-primary'
+          : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+          }`}
       >
         <Icon className='h-4 w-4 shrink-0' />
         {item.label}
@@ -170,10 +173,7 @@ export function MainLayout({ children }) {
             to='/dashboard'
             className='flex items-center gap-2 text-xl font-bold tracking-tight text-primary'
           >
-            <div className='flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground'>
-              N
-            </div>
-            NovaBank
+            <img src={novaLogo} alt='NovaBank' className='h-20 w-auto' />
           </Link>
         </div>
 
@@ -200,10 +200,7 @@ export function MainLayout({ children }) {
             to='/dashboard'
             className='flex items-center gap-2 text-lg font-bold tracking-tight text-primary'
           >
-            <div className='flex h-6 w-6 items-center justify-center rounded bg-primary text-xs text-primary-foreground'>
-              N
-            </div>
-            NovaBank
+            <img src={novaLogo} alt='NovaBank' className='h-20 w-auto' />
           </Link>
 
           <Button
@@ -231,10 +228,7 @@ export function MainLayout({ children }) {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className='flex items-center gap-2 font-bold text-primary'
                 >
-                  <div className='flex h-7 w-7 items-center justify-center rounded bg-primary text-xs text-primary-foreground'>
-                    N
-                  </div>
-                  NovaBank
+                  <img src={novaLogo} alt='NovaBank' className='h-20 w-auto' />
                 </Link>
                 <Button
                   variant='ghost'

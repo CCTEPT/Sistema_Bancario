@@ -1,6 +1,18 @@
 import Account from "../models/account.model.js"
 import { registrarMovimiento } from "./movement.service.js"
 import mongoose from "mongoose"
+import axios from "axios"
+
+const FINANCIAL_CONFIG_URL = process.env.FINANCIAL_CONFIG_URL || "http://localhost:4000/api"
+
+async function convertCurrency(from, to, amount) {
+    const { data } = await axios.post(`${FINANCIAL_CONFIG_URL}/exchange/convert`, {
+        from,
+        to,
+        amount
+    })
+    return Number(data.converted)
+}
 
 export const perfomTransfer = async (dataTransfer, userId) => {
     try {
@@ -44,12 +56,22 @@ export const perfomTransfer = async (dataTransfer, userId) => {
             throw new Error("Fondos insuficientes en la cuenta origen")
         }
 
-        // Actualizar balances
+        // Convertir moneda si las cuentas usan divisas diferentes
         const sourceBefore = source.saldo
         const destinationBefore = destination.saldo
+        let destinationAmount = amount
+        let conversionNote = ''
+
+        if (source.divisa !== destination.divisa) {
+            destinationAmount = await convertCurrency(source.divisa, destination.divisa, amount)
+            if (Number.isNaN(destinationAmount) || destinationAmount <= 0) {
+                throw new Error(`No se pudo convertir ${amount} ${source.divisa} a ${destination.divisa}`)
+            }
+            conversionNote = ` (convertido a ${destinationAmount.toFixed(2)} ${destination.divisa})`
+        }
 
         source.saldo -= amount
-        destination.saldo += amount
+        destination.saldo += destinationAmount
 
         const sourceAfter = source.saldo
         const destinationAfter = destination.saldo
@@ -64,7 +86,7 @@ export const perfomTransfer = async (dataTransfer, userId) => {
             movementType: "TRANSFER_OUT",
             amount,
             executedBy: userId,
-            description: dataTransfer.description || "Transferencia enviada",
+            description: dataTransfer.description || `Transferencia enviada${conversionNote}`,
             channel: dataTransfer.channel || "APP",
             balanceBefore: sourceBefore,
             balanceAfter: sourceAfter
@@ -74,9 +96,9 @@ export const perfomTransfer = async (dataTransfer, userId) => {
             accountId: destination._id,
             destinationAccountId: source._id,
             movementType: "TRANSFER_IN",
-            amount,
+            amount: destinationAmount,
             executedBy: userId,
-            description: dataTransfer.description || "Transferencia recibida",
+            description: dataTransfer.description || `Transferencia recibida${conversionNote}`,
             channel: dataTransfer.channel || "APP",
             balanceBefore: destinationBefore,
             balanceAfter: destinationAfter

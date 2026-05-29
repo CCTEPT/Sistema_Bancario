@@ -26,6 +26,7 @@ export const createAccountSchema = {
           type: 'object',
           properties: {
             _id: { type: 'string', description: 'ID único de la cuenta' },
+            numeroCuenta: { type: 'string', description: 'Número de cuenta generado' },
             idUsuario: { type: 'string', description: 'ID del usuario propietario' },
             tipoCuenta: { type: 'string' },
             divisa: { type: 'string' },
@@ -39,6 +40,7 @@ export const createAccountSchema = {
         message: 'Cuenta creada correctamente',
         account: {
           _id: '507f1f77bcf86cd799439011',
+          numeroCuenta: 'NB123456789012',
           idUsuario: '507f1f77bcf86cd799439012',
           tipoCuenta: 'ahorro',
           divisa: 'GTQ',
@@ -80,6 +82,7 @@ export const getAccountsSchema = {
             type: 'object',
             properties: {
               _id: { type: 'string' },
+              numeroCuenta: { type: 'string' },
               idUsuario: { type: 'string' },
               tipoCuenta: { type: 'string' },
               divisa: { type: 'string' },
@@ -95,6 +98,7 @@ export const getAccountsSchema = {
         accounts: [
           {
             _id: '507f1f77bcf86cd799439011',
+            numeroCuenta: 'NB123456789012',
             idUsuario: '507f1f77bcf86cd799439012',
             tipoCuenta: 'ahorro',
             divisa: 'GTQ',
@@ -134,6 +138,7 @@ export const getAccountByIdSchema = {
           type: 'object',
           properties: {
             _id: { type: 'string' },
+            numeroCuenta: { type: 'string' },
             idUsuario: { type: 'string' },
             tipoCuenta: { type: 'string' },
             divisa: { type: 'string' },
@@ -147,6 +152,7 @@ export const getAccountByIdSchema = {
         message: 'Detalle de cuenta',
         account: {
           _id: '507f1f77bcf86cd799439011',
+          numeroCuenta: 'NB123456789012',
           idUsuario: '507f1f77bcf86cd799439012',
           tipoCuenta: 'ahorro',
           divisa: 'GTQ',

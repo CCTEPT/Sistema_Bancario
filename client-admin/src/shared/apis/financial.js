@@ -23,3 +23,12 @@ export async function convertCurrency({ from, to, amount }) {
   });
   return data;
 }
+
+export async function setExchangeRate({ from, to, rate }) {
+  const { data } = await axiosFinancial.post('/exchange/rate', {
+    from,
+    to,
+    rate,
+  });
+  return data;
+}

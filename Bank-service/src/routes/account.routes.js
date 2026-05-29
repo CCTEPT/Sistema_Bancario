@@ -30,11 +30,58 @@ async function routes(fastify, options) {
         accountController.getAccounts
     );
 
-    // Ruta para obtener cuenta por ID, solo para ADMIN_ROLE y USER_ROLE
+    fastify.get(
+        "/manage",
+        {
+            preHandler: fastify.authorizeRole("EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            schema: {
+                tags: ["Accounts"],
+                security: [{ bearerAuth: [] }]
+            }
+        },
+        accountController.getAllAccounts
+    );
+
+    fastify.get(
+        "/requests",
+        {
+            preHandler: fastify.authorizeRole("USER_ROLE", "EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            schema: {
+                tags: ["Accounts"],
+                security: [{ bearerAuth: [] }]
+            }
+        },
+        accountController.getAccountRequests
+    );
+
+    fastify.post(
+        "/requests/:requestId/approve",
+        {
+            preHandler: fastify.authorizeRole("EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            schema: {
+                tags: ["Accounts"],
+                security: [{ bearerAuth: [] }]
+            }
+        },
+        accountController.approveAccountRequest
+    );
+
+    fastify.post(
+        "/requests/:requestId/reject",
+        {
+            preHandler: fastify.authorizeRole("EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            schema: {
+                tags: ["Accounts"],
+                security: [{ bearerAuth: [] }]
+            }
+        },
+        accountController.rejectAccountRequest
+    );
+
     fastify.get(
         "/:idCuenta",
         {
-            preHandler: fastify.authorizeRole("USER_ROLE", "ADMIN_ROLE"),
+            preHandler: fastify.authorizeRole("USER_ROLE", "EMPLOYEE_ROLE", "ADMIN_ROLE"),
             schema: {
                 ...getAccountByIdSchema,
                 tags: ["Accounts"],
@@ -42,6 +89,18 @@ async function routes(fastify, options) {
             }
         },
         accountController.getAccountById
+    );
+
+    fastify.patch(
+        "/:idCuenta/status",
+        {
+            preHandler: fastify.authorizeRole("USER_ROLE", "EMPLOYEE_ROLE", "ADMIN_ROLE"),
+            schema: {
+                tags: ["Accounts"],
+                security: [{ bearerAuth: [] }]
+            }
+        },
+        accountController.updateAccountStatus
     );
 
 }

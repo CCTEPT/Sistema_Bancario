@@ -48,10 +48,14 @@ export async function registrarMovimiento({
 }
 
 export async function getMovementsByAccount(accountId, { limit = 50, skip = 0 } = {}) {
-    return Movement.find({ accountId })
+    const results = await Movement.find({ accountId })
         .sort({ date: -1 })
         .skip(skip)
-        .limit(limit)
+        .limit(limit);
+
+    // Ver cómo están guardados los accountId reales
+    const sample = await Movement.findOne().lean();
+    return results;
 }
 
 export async function getMovementsForUser(userId, role, { limit = 100, skip = 0 } = {}) {

@@ -49,9 +49,9 @@ export const AuthPage = () => {
               />
             ) : (
               <img
-                src='/src/assets/img/logoBanco.png'
+                src='/src/assets/img/icon.png'
                 alt='NovaBank Logo'
-                className='w-16 h-16 object-contain'
+                className='w-20 h-20 object-contain'
               />
             )}
           </div>

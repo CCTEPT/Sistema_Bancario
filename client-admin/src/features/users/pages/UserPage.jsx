@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useUserManagementStore } from '../store/useUserManagementStore.js';
 import { useAuthStore } from '../../auth/store/authStore.js';
-import { Search, Loader2, ShieldCheck, User, UserCog, Users } from 'lucide-react';
+import { Search, Loader2, ShieldCheck, User, UserCog, Users, UserPlus, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 10;
 
 const ROLES = ['USER_ROLE', 'EMPLOYEE_ROLE', 'ADMIN_ROLE'];
+const CREATE_ROLES = ['USER_ROLE', 'EMPLOYEE_ROLE'];
 
 const ROLE_STYLE = {
   ADMIN_ROLE: {
@@ -77,15 +79,213 @@ function RoleSelector({ user, onSave, saving }) {
   );
 }
 
+function StatusBadge({ active }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
+        active
+          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+          : 'border-rose-500/20 bg-rose-500/10 text-rose-400'
+      }`}
+    >
+      {active ? 'Activo' : 'Desactivado'}
+    </span>
+  );
+}
+
+function CreateUserModal({ open, onClose, onCreate, saving }) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      roleName: 'USER_ROLE',
+    },
+  });
+
+  if (!open) return null;
+
+  const submit = async (values) => {
+    const result = await onCreate(values);
+    if (result?.success) {
+      reset({ roleName: 'USER_ROLE' });
+      onClose();
+    }
+  };
+
+  const inputClass =
+    'w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/30';
+
+  return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+      <button
+        type='button'
+        className='absolute inset-0 bg-black/70'
+        aria-label='Cerrar modal'
+        onClick={onClose}
+      />
+      <div className='relative w-full max-w-3xl rounded-lg border border-border bg-card shadow-xl'>
+        <div className='flex items-center justify-between border-b border-border px-5 py-4'>
+          <div>
+            <h2 className='text-lg font-semibold'>Crear usuario</h2>
+            <p className='text-xs text-muted-foreground'>Registra un cliente o empleado y asigna su rol.</p>
+          </div>
+          <button
+            type='button'
+            onClick={onClose}
+            className='inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground'
+            aria-label='Cerrar'
+          >
+            <X className='h-4 w-4' />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(submit)} className='p-5'>
+          <div className='grid gap-4 md:grid-cols-2'>
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Nombre</span>
+              <input
+                {...register('name', {
+                  required: 'El nombre es requerido',
+                  minLength: { value: 3, message: 'Minimo 3 caracteres' },
+                  maxLength: { value: 25, message: 'Maximo 25 caracteres' },
+                })}
+                className={inputClass}
+                placeholder='Nombre'
+              />
+              {errors.name && <span className='text-xs text-destructive'>{errors.name.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Apellido</span>
+              <input
+                {...register('surname', {
+                  required: 'El apellido es requerido',
+                  minLength: { value: 3, message: 'Minimo 3 caracteres' },
+                  maxLength: { value: 25, message: 'Maximo 25 caracteres' },
+                })}
+                className={inputClass}
+                placeholder='Apellido'
+              />
+              {errors.surname && <span className='text-xs text-destructive'>{errors.surname.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Username</span>
+              <input
+                {...register('username', {
+                  required: 'El username es requerido',
+                  minLength: { value: 3, message: 'Minimo 3 caracteres' },
+                })}
+                className={inputClass}
+                placeholder='usuario'
+              />
+              {errors.username && <span className='text-xs text-destructive'>{errors.username.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Email</span>
+              <input
+                type='email'
+                {...register('email', {
+                  required: 'El email es requerido',
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Email invalido',
+                  },
+                })}
+                className={inputClass}
+                placeholder='correo@example.com'
+              />
+              {errors.email && <span className='text-xs text-destructive'>{errors.email.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Contrasena</span>
+              <input
+                type='password'
+                {...register('password', {
+                  required: 'La contrasena es requerida',
+                  minLength: { value: 8, message: 'Minimo 8 caracteres' },
+                })}
+                className={inputClass}
+                placeholder='********'
+              />
+              {errors.password && <span className='text-xs text-destructive'>{errors.password.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Telefono</span>
+              <input
+                {...register('phone', {
+                  required: 'El telefono es requerido',
+                  pattern: { value: /^[0-9]{8}$/, message: 'Debe tener exactamente 8 digitos' },
+                })}
+                className={inputClass}
+                placeholder='12345678'
+              />
+              {errors.phone && <span className='text-xs text-destructive'>{errors.phone.message}</span>}
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Rol</span>
+              <select {...register('roleName', { required: true })} className={inputClass}>
+                {CREATE_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_STYLE[role]?.label || role}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className='space-y-1.5 text-sm'>
+              <span className='font-medium'>Foto de perfil</span>
+              <input
+                type='file'
+                accept='image/*'
+                {...register('profilePicture')}
+                className='w-full rounded-lg border border-dashed border-border bg-background/70 px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-primary'
+              />
+            </label>
+          </div>
+
+          <div className='mt-5 flex justify-end gap-2 border-t border-border pt-4'>
+            <button
+              type='button'
+              onClick={onClose}
+              className='rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground'
+            >
+              Cancelar
+            </button>
+            <button
+              type='submit'
+              disabled={saving}
+              className='inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60'
+            >
+              {saving && <Loader2 className='h-4 w-4 animate-spin' />}
+              Crear usuario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export const UserPage = () => {
-  const { users, loading, getAllUsers, updateUserRole } = useUserManagementStore();
+  const { users, loading, error, getAllUsers, updateUserRole, updateUserStatus, createUser } = useUserManagementStore();
   const currentUser = useAuthStore((state) => state.user);
   const isAdmin = currentUser?.role === 'ADMIN_ROLE';
+  const canManageStatus = ['ADMIN_ROLE', 'EMPLOYEE_ROLE'].includes(currentUser?.role);
 
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [savingId, setSavingId] = useState(null);
+  const [savingStatusId, setSavingStatusId] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     getAllUsers();
@@ -124,6 +324,37 @@ export const UserPage = () => {
     }
   };
 
+  const handleToggleStatus = async (user) => {
+    const id = user.id || user._id;
+    const nextStatus = !Boolean(user.status);
+    setSavingStatusId(id);
+    const res = await updateUserStatus(id, nextStatus);
+    setSavingStatusId(null);
+
+    if (res.success) {
+      toast.success(nextStatus ? 'Usuario activado' : 'Usuario desactivado');
+    } else {
+      toast.error(res.error || 'Error al actualizar estado');
+    }
+  };
+
+  const handleCreateUser = async (values) => {
+    const res = await createUser(values);
+    if (res.success) {
+      toast.success('Usuario creado correctamente');
+      await getAllUsers(undefined, { force: true });
+    } else if (res.created && res.rolePending) {
+      toast.error(
+        `Usuario creado, pero no se pudo asignar ${ROLE_STYLE[res.pendingRoleName]?.label || res.pendingRoleName}. Reinicia Auth-service y cambia el rol desde la tabla.`
+      );
+      await getAllUsers(undefined, { force: true });
+    } else {
+      toast.error(res.error || 'Error al crear usuario');
+    }
+
+    return res;
+  };
+
   const counts = {
     total: safeUsers.length,
     admins: safeUsers.filter((u) => u.role === 'ADMIN_ROLE').length,
@@ -133,11 +364,23 @@ export const UserPage = () => {
 
   return (
     <div className='space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-500'>
-      <div>
-        <h1 className='text-2xl font-bold tracking-tight text-primary'>Usuarios</h1>
-        <p className='text-sm text-muted-foreground mt-1'>
-          Gestiona los usuarios registrados y sus roles.
-        </p>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-primary'>Usuarios</h1>
+          <p className='text-sm text-muted-foreground mt-1'>
+            Gestiona los usuarios registrados y sus roles.
+          </p>
+        </div>
+        {isAdmin && (
+          <button
+            type='button'
+            onClick={() => setCreateOpen(true)}
+            className='inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90'
+          >
+            <UserPlus className='h-4 w-4' />
+            Crear usuario
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -235,7 +478,22 @@ export const UserPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className='p-0'>
-          {loading && safeUsers.length === 0 ? (
+          {error && safeUsers.length === 0 ? (
+            <div className='flex flex-col items-center justify-center py-16 text-center px-6'>
+              <div className='p-4 rounded-full bg-destructive/10 mb-3'>
+                <Users className='h-6 w-6 text-destructive' />
+              </div>
+              <p className='text-sm font-medium text-destructive'>No se pudieron cargar los usuarios</p>
+              <p className='mt-1 max-w-md text-xs text-muted-foreground'>{error}</p>
+              <button
+                type='button'
+                onClick={() => getAllUsers(undefined, { force: true })}
+                className='mt-4 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-secondary'
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : loading && safeUsers.length === 0 ? (
             <div className='flex items-center justify-center gap-2 py-16 text-muted-foreground text-sm'>
               <Loader2 className='h-4 w-4 animate-spin' /> Cargando usuarios...
             </div>
@@ -254,7 +512,9 @@ export const UserPage = () => {
                     <th className='text-left px-6 py-3'>Usuario</th>
                     <th className='text-left px-6 py-3'>Email</th>
                     <th className='text-left px-6 py-3'>Rol actual</th>
+                    <th className='text-left px-6 py-3'>Estado</th>
                     {isAdmin && <th className='text-left px-6 py-3'>Cambiar rol</th>}
+                    {canManageStatus && <th className='text-left px-6 py-3'>Activacion</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -284,6 +544,9 @@ export const UserPage = () => {
                         <td className='px-6 py-4'>
                           <RoleBadge role={u.role} />
                         </td>
+                        <td className='px-6 py-4'>
+                          <StatusBadge active={Boolean(u.status)} />
+                        </td>
                         {isAdmin && (
                           <td className='px-6 py-4'>
                             <RoleSelector
@@ -291,6 +554,23 @@ export const UserPage = () => {
                               onSave={handleSaveRole}
                               saving={savingId === id}
                             />
+                          </td>
+                        )}
+                        {canManageStatus && (
+                          <td className='px-6 py-4'>
+                            <button
+                              type='button'
+                              onClick={() => handleToggleStatus(u)}
+                              disabled={savingStatusId === id}
+                              className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                                u.status
+                                  ? 'border-rose-500/20 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
+                                  : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                              }`}
+                            >
+                              {savingStatusId === id && <Loader2 className='h-3 w-3 animate-spin' />}
+                              {u.status ? 'Desactivar' : 'Activar'}
+                            </button>
                           </td>
                         )}
                       </tr>
@@ -326,6 +606,13 @@ export const UserPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <CreateUserModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreateUser}
+        saving={loading}
+      />
     </div>
   );
 };

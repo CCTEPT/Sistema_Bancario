@@ -48,12 +48,13 @@ export const useAuthStore = create(
 
             //funcion para cerrar sesion
             logout: () => {
-                localStorage.removeItem('banking_token');
+                localStorage.clear();
                 set({
                     user: null,
                     token: null,
                     refreshToken: null,
                     expiresAt: null,
+                    role: null,
                     isAuthenticated: false,
                 });
             },

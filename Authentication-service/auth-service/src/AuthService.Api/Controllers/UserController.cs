@@ -31,6 +31,19 @@ public class UserController(IUserManagementService userManagementService) : Cont
         return roles.Contains(AuthService.Domain.Constants.RoleConstants.ADMIN_ROLE);
     }
 
+    private async Task<bool> CurrentUserIsAdminOrEmployee()
+    {
+        var userId = User.Claims.FirstOrDefault(c =>
+            c.Type == "sub" ||
+            c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId)) return false;
+
+        var roles = await userManagementService.GetUserRolesAsync(userId);
+        return roles.Contains(AuthService.Domain.Constants.RoleConstants.ADMIN_ROLE) ||
+               roles.Contains(AuthService.Domain.Constants.RoleConstants.EMPLOYEE_ROLE);
+    }
+
     /// <summary>
     /// Actualizar el rol de un usuario
     /// </summary>
@@ -95,6 +108,29 @@ public class UserController(IUserManagementService userManagementService) : Cont
         {
             // Log de error interno y respuesta genérica
             return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+        }
+    }
+
+    [HttpPatch("{userId}/status")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<UserResponseDto>> UpdateUserStatus(string userId, [FromBody] UpdateUserStatusDto dto)
+    {
+        if (!await CurrentUserIsAdminOrEmployee())
+        {
+            return StatusCode(403, new { success = false, message = "No tienes permisos para cambiar estados." });
+        }
+
+        try
+        {
+            var result = await userManagementService.UpdateUserStatusAsync(userId, dto.Status);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
         }
     }
 
@@ -166,7 +202,7 @@ public class UserController(IUserManagementService userManagementService) : Cont
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IReadOnlyList<UserResponseDto>>> GetUsersByRole(string roleName)
     {
-        if (!await CurrentUserIsAdmin())
+        if (!await CurrentUserIsAdminOrEmployee())
         {
             return StatusCode(403, new { success = false, message = "Forbidden" });
         }
