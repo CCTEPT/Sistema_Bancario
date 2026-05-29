@@ -85,6 +85,7 @@ export const AuthPage = () => {
           <RegisterForm
             onSwitch={() => {
               setIsRegister(false);
+              setPreview(null);
             }}
             onPreview={setPreview}
           />

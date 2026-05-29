@@ -19,8 +19,8 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
     formData.append('Email', values.email);
     formData.append('Password', values.password);
     formData.append('Phone', values.phone);
-    formData.append('TipoCuenta', values.tipoCuenta);
-    formData.append('Divisa', values.divisa);
+    //formData.append('TipoCuenta', values.tipoCuenta);
+    //formData.append('Divisa', values.divisa);
     if (values.profilePicture?.[0]) {
       formData.append('ProfilePicture', values.profilePicture[0]);
     }
@@ -83,8 +83,8 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
           id='surname'
           placeholder='Apellido'
           className={`
-                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
-                        ${errors.surname ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
+                        ${errors.name ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
         />
         {errors.surname && <p className='text-red-400 text-xs mt-1.5'>{errors.surname.message}</p>}
       </div>
@@ -105,7 +105,7 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
           id='username'
           placeholder='Nombre de Usuario'
           className={`
-                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
                         ${errors.username ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
         />
         {errors.username && (
@@ -129,7 +129,7 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
           id='email'
           placeholder='correo@example.com'
           className={`
-                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
                         ${errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
         />
         {errors.email && <p className='text-red-400 text-xs mt-1.5'>{errors.email.message}</p>}
@@ -151,7 +151,7 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
           id='password'
           placeholder='••••••••'
           className={`
-                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
                         ${errors.password ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
         />
         {errors.password && (
@@ -175,7 +175,7 @@ export const RegisterForm = ({ loading, error, onSwitch, onPreview }) => {
           id='phone'
           placeholder='12345678'
           className={`
-                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30"
+                        w-full rounded-xl border border-white/20 bg-[#0d1f35]/70 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-main-blue focus:ring-4 focus:ring-main-blue/30
                         ${errors.phone ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200'}`}
         />
         {errors.phone && <p className='text-red-400 text-xs mt-1.5'>{errors.phone.message}</p>}
