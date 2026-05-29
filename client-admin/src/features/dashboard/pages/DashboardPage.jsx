@@ -6,6 +6,7 @@ import {
     Loader2, ArrowUpRight, ArrowDownRight, ArrowRightLeft,
     DollarSign, TrendingUp, TrendingDown, Wallet, Send,
     Plus, Minus, RefreshCw, ChevronRight, Eye, EyeOff,
+    Star,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -16,6 +17,11 @@ import {
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useAuthStore } from "@/features/auth/store/authStore.js";
 import { getUserAccounts, getUserMovements } from "@/shared/apis/bank";
+import {
+    getAccountId as getStoredAccountId,
+    loadFavoriteAccounts,
+    pruneInactiveFavorites,
+} from "@/shared/utils/accountFavorites";
 
 function formatMoney(amount, currency = "USD") {
     return new Intl.NumberFormat("en-US", {
@@ -163,9 +169,17 @@ export default function DashboardPage() {
     const [transactionsLoading, setTransactionsLoading] = useState(true);
     const [transactionsError, setTransactionsError] = useState(null);
     const [visibleAccountNumbers, setVisibleAccountNumbers] = useState({});
+    const [visibleAccountBalances, setVisibleAccountBalances] = useState({});
+    const [favoriteAccountIds, setFavoriteAccountIds] = useState([]);
 
+    const userId = user?.id || user?._id || user?.Id || user?.username || user?.email;
     const accountById = new Map(accounts.map((account) => [String(account._id), account]));
-    const primaryAccount = accounts[0];
+    const favoriteAccountSet = new Set(favoriteAccountIds.map(String));
+    const favoriteAccounts = accounts.filter(
+        (account) => account.estado !== "INACTIVE" && favoriteAccountSet.has(getAccountId(account))
+    );
+    const displayAccounts = accounts.filter((account) => account.estado !== "INACTIVE");
+    const primaryAccount = favoriteAccounts[0] || accounts[0];
     const normalizedTransactions = transactions.map((tx) => {
         const account = accountById.get(String(tx.accountId));
         const balanceBefore = Number(tx.balanceBefore);
@@ -204,6 +218,8 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
+        setFavoriteAccountIds(loadFavoriteAccounts(userId));
+
         const loadDashboard = async () => {
             try {
                 setAccountsLoading(true);
@@ -216,7 +232,10 @@ export default function DashboardPage() {
                     getUserMovements({ limit: 100 }),
                 ]);
 
-                setAccounts(accountsResponse.accounts || []);
+                const fetchedAccounts = accountsResponse.accounts || [];
+                setAccounts(fetchedAccounts);
+                const pruned = pruneInactiveFavorites(userId, fetchedAccounts);
+                setFavoriteAccountIds(pruned);
                 setTransactions(
                     (movementsResponse.data || []).sort(
                         (a, b) => new Date(b.date || b.createdAt || b.updatedAt) - new Date(a.date || a.createdAt || a.updatedAt)
@@ -236,11 +255,13 @@ export default function DashboardPage() {
 
         const timer = setTimeout(() => setIsLoading(false), 1000);
         return () => clearTimeout(timer);
-    }, []);
+    }, [userId]);
 
     const chartData = buildChartData(normalizedTransactions);
 
-    const getAccountId = (account) => String(account._id || account.idCuenta || account.id || account.numeroCuenta);
+    function getAccountId(account) {
+        return getStoredAccountId(account);
+    }
 
     const getAccountNumber = (account) =>
         account.numeroCuenta || account.accountNumber || account.raw?.numeroCuenta || account._id || "";
@@ -253,6 +274,13 @@ export default function DashboardPage() {
 
     const toggleAccountNumber = (accountId) => {
         setVisibleAccountNumbers((prev) => ({
+            ...prev,
+            [accountId]: !prev[accountId],
+        }));
+    };
+
+    const toggleAccountBalance = (accountId) => {
+        setVisibleAccountBalances((prev) => ({
             ...prev,
             [accountId]: !prev[accountId],
         }));
@@ -335,62 +363,66 @@ export default function DashboardPage() {
                 />
             </div>
 
-            <Card className="bg-card/60 backdrop-blur border-border/50">
+            <Card className="bg-card/60 backdrop-blur border-primary/20">
                 <CardHeader>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                         <div>
-                            <CardTitle className="text-base font-semibold">Tus cuentas</CardTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">Resumen de tus cuentas activas.</p>
+                            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                                <span>Favorite Accounts</span>
+                            </CardTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Selecciona una cuenta favorita para que aparezca anclada en este panel.
+                            </p>
                         </div>
-                        {accountsLoading && (
-                            <span className="text-xs text-muted-foreground">Cargando cuentas...</span>
-                        )}
+                        <Link to="/dashboard/accounts">
+                            <Button variant="outline" size="sm" className="h-8 text-xs">
+                                Gestionar
+                                <ChevronRight className="h-3 w-3 ml-1" />
+                            </Button>
+                        </Link>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    {accountsError ? (
-                        <p className="text-sm text-destructive">{accountsError}</p>
-                    ) : accounts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No se encontraron cuentas activas.</p>
+                <CardContent>
+                    {favoriteAccounts.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-border/60 bg-background/30 p-5 text-sm text-muted-foreground">
+                            No tienes cuentas favoritas seleccionadas.
+                        </div>
                     ) : (
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {accounts.map((account) => {
+                            {favoriteAccounts.map((account) => {
                                 const accountId = getAccountId(account);
                                 const accountNumber = getAccountNumber(account);
 
                                 return (
-                                <div key={accountId} className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                                    <p className="text-xs text-muted-foreground uppercase tracking-[0.25em]">{account.tipoCuenta || 'Cuenta'}</p>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <p className="font-semibold font-mono text-sm">
-                                            {visibleAccountNumbers[accountId]
-                                                ? accountNumber || "Sin numero"
-                                                : maskAccountNumber(accountNumber)}
-                                        </p>
+                                    <div key={accountId} className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground uppercase tracking-[0.25em]">{account.tipoCuenta || "Cuenta"}</p>
+                                                <p className="mt-2 font-semibold font-mono text-sm">
+                                                    {visibleAccountNumbers[accountId] ? accountNumber || "Sin numero" : maskAccountNumber(accountNumber)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1">{account.divisa}</p>
+                                        <p className="mt-3 text-xl font-semibold">{formatMoney(account.saldo, account.divisa)}</p>
                                         <button
                                             type="button"
                                             onClick={() => toggleAccountNumber(accountId)}
-                                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/50 text-muted-foreground hover:text-foreground hover:bg-background"
-                                            aria-label={visibleAccountNumbers[accountId] ? "Ocultar numero de cuenta" : "Mostrar numero de cuenta"}
-                                            title={visibleAccountNumbers[accountId] ? "Ocultar numero de cuenta" : "Mostrar numero de cuenta"}
+                                            className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border border-border/50 px-3 text-xs text-muted-foreground hover:text-foreground hover:bg-background"
                                             disabled={!accountNumber}
                                         >
-                                            {visibleAccountNumbers[accountId] ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
+                                            {visibleAccountNumbers[accountId] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                            {visibleAccountNumbers[accountId] ? "Ocultar numero" : "Ver numero"}
                                         </button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">{account.divisa}</p>
-                                    <p className="mt-3 text-lg font-semibold">{formatMoney(account.saldo, account.divisa)}</p>
-                                </div>
                                 );
                             })}
                         </div>
                     )}
                 </CardContent>
             </Card>
+
+
 
             {/* Activity chart — only shown if there is data */}
             {chartData.length > 0 && (

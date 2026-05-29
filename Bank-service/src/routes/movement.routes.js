@@ -54,6 +54,7 @@ export default async function movementRoutes(fastify, options) {
         preHandler: [authMiddleware],
         schema: {
             ...historySchema,
+            response: undefined,
             tags: ['Movements'],
             security: [{ bearerAuth: [] }]
         }

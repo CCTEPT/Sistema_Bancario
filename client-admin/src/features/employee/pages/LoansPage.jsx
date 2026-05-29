@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import { ClipboardList, CheckCircle, XCircle, Clock, Loader2, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { getLoans, approveLoan, rejectLoan } from '@/shared/apis/employee.js';
+import { getClients } from '@/shared/apis/employee.js';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pendiente', icon: Clock, bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
-  PENDIENTE: { label: 'Pendiente', icon: Clock, bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
-  APPROVED: { label: 'Aprobado', icon: CheckCircle, bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  APROBADO: { label: 'Aprobado', icon: CheckCircle, bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  REJECTED: { label: 'Rechazado', icon: XCircle, bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
-  RECHAZADO: { label: 'Rechazado', icon: XCircle, bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
+  PENDING:   { label: 'Pendiente',  icon: Clock,        bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'  },
+  APPROVED:  { label: 'Aprobado',   icon: CheckCircle,  bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  ACTIVE:    { label: 'Activo',     icon: CheckCircle,  bg: 'bg-sky-500/10',     text: 'text-sky-400',     border: 'border-sky-500/20'    },
+  REJECTED:  { label: 'Rechazado',  icon: XCircle,      bg: 'bg-rose-500/10',    text: 'text-rose-400',    border: 'border-rose-500/20'   },
 };
 
-function RejectModal({ loan, onClose, onConfirm }) {
+function RejectModal({ loan, clientName, onClose, onConfirm }) {
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +29,8 @@ function RejectModal({ loan, onClose, onConfirm }) {
       <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl mx-4">
         <h3 className="text-base font-semibold mb-1">Rechazar solicitud</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          ¿Estás seguro de rechazar el préstamo de <span className="text-foreground font-medium">{loan.clientName || loan.userId || '—'}</span>?
+          ¿Estás seguro de rechazar el préstamo de{' '}
+          <span className="text-foreground font-medium">{clientName || '—'}</span>?
         </p>
         <textarea
           value={reason}
@@ -40,7 +40,10 @@ function RejectModal({ loan, onClose, onConfirm }) {
           className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/50 outline-none focus:border-rose-500/60 focus:ring-1 focus:ring-rose-500/20 resize-none transition-all mb-4"
         />
         <div className="flex gap-3 justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/30 transition-colors">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted/30 transition-colors"
+          >
             Cancelar
           </button>
           <button
@@ -59,6 +62,7 @@ function RejectModal({ loan, onClose, onConfirm }) {
 
 export default function LoansPage() {
   const [loans, setLoans] = useState([]);
+  const [clientMap, setClientMap] = useState({}); // idUsuario → displayName
   const [loading, setLoading] = useState(true);
   const [backendAvailable, setBackendAvailable] = useState(true);
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -66,13 +70,35 @@ export default function LoansPage() {
 
   const load = async () => {
     try {
-      const res = await getLoans();
-      const list = Array.isArray(res?.loans) ? res.loans : Array.isArray(res) ? res : [];
-      setLoans(list);
-      setBackendAvailable(true);
-    } catch (err) {
-      if (err.response?.status === 404 || !err.response) {
-        setBackendAvailable(false);
+      // Cargar préstamos y clientes en paralelo
+      const [loansRes, clientsRes] = await Promise.allSettled([
+        getLoans(),
+        getClients(),
+      ]);
+
+      if (loansRes.status === 'fulfilled') {
+        const list = Array.isArray(loansRes.value?.loans)
+          ? loansRes.value.loans
+          : Array.isArray(loansRes.value)
+          ? loansRes.value
+          : [];
+        setLoans(list);
+        setBackendAvailable(true);
+      } else {
+        const err = loansRes.reason;
+        if (err.response?.status === 404 || !err.response) setBackendAvailable(false);
+      }
+
+      if (clientsRes.status === 'fulfilled') {
+        const clients = clientsRes.value.clients || [];
+        // Construir mapa idUsuario → nombre completo
+        const map = {};
+        clients.forEach((c) => {
+          const id = c.id || c._id;
+          const name = [c.name, c.surname].filter(Boolean).join(' ') || c.username || c.email || id;
+          if (id) map[id] = name;
+        });
+        setClientMap(map);
       }
     } finally {
       setLoading(false);
@@ -84,9 +110,11 @@ export default function LoansPage() {
   const handleApprove = async (loan) => {
     try {
       await approveLoan(loan._id || loan.id);
-      toast.success('Préstamo aprobado.');
+      toast.success('Préstamo aprobado y monto desembolsado.');
       setLoans((prev) =>
-        prev.map((l) => (l._id === loan._id || l.id === loan.id) ? { ...l, status: 'APPROVED', estado: 'APROBADO' } : l)
+        prev.map((l) =>
+          (l._id === loan._id || l.id === loan.id) ? { ...l, status: 'ACTIVE' } : l
+        )
       );
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al aprobar.');
@@ -98,7 +126,9 @@ export default function LoansPage() {
       await rejectLoan(loan._id || loan.id, reason);
       toast.success('Préstamo rechazado.');
       setLoans((prev) =>
-        prev.map((l) => (l._id === loan._id || l.id === loan.id) ? { ...l, status: 'REJECTED', estado: 'RECHAZADO' } : l)
+        prev.map((l) =>
+          (l._id === loan._id || l.id === loan.id) ? { ...l, status: 'REJECTED' } : l
+        )
       );
       setRejectTarget(null);
     } catch (err) {
@@ -106,17 +136,15 @@ export default function LoansPage() {
     }
   };
 
-  const filtered = (Array.isArray(loans) ? loans : []).filter((l) => {
+  const filtered = loans.filter((l) => {
     if (filterStatus === 'ALL') return true;
-    const s = (l.status || l.estado || '').toUpperCase();
-    return s === filterStatus;
+    return (l.status || '').toUpperCase() === filterStatus;
   });
 
-  const safeLoans = Array.isArray(loans) ? loans : [];
   const counts = {
-    pending: safeLoans.filter((l) => ['PENDING', 'PENDIENTE'].includes((l.status || l.estado || '').toUpperCase())).length,
-    approved: safeLoans.filter((l) => ['APPROVED', 'APROBADO'].includes((l.status || l.estado || '').toUpperCase())).length,
-    rejected: safeLoans.filter((l) => ['REJECTED', 'RECHAZADO'].includes((l.status || l.estado || '').toUpperCase())).length,
+    pending:  loans.filter((l) => l.status === 'PENDING').length,
+    active:   loans.filter((l) => l.status === 'ACTIVE').length,
+    rejected: loans.filter((l) => l.status === 'REJECTED').length,
   };
 
   return (
@@ -131,30 +159,40 @@ export default function LoansPage() {
           <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-semibold">Módulo de préstamos no disponible</p>
-            <p className="text-xs mt-1 opacity-80">El backend de préstamos está pendiente de implementación. Esta vista está lista para conectarse cuando el endpoint <code className="font-mono">/loans</code> esté disponible.</p>
+            <p className="text-xs mt-1 opacity-80">
+              El endpoint <code className="font-mono">/loans</code> no está disponible.
+            </p>
           </div>
         </div>
       )}
 
+      {/* Stat tiles */}
       <div className="grid gap-3 grid-cols-3">
         {[
-          { label: 'Pendientes', value: counts.pending, bg: 'bg-amber-500/10', text: 'text-amber-400', status: 'PENDING' },
-          { label: 'Aprobados', value: counts.approved, bg: 'bg-emerald-500/10', text: 'text-emerald-400', status: 'APPROVED' },
-          { label: 'Rechazados', value: counts.rejected, bg: 'bg-rose-500/10', text: 'text-rose-400', status: 'REJECTED' },
+          { label: 'Pendientes', value: counts.pending,  bg: 'bg-amber-500/10',   text: 'text-amber-400',   status: 'PENDING'  },
+          { label: 'Activos',    value: counts.active,   bg: 'bg-sky-500/10',     text: 'text-sky-400',     status: 'ACTIVE'   },
+          { label: 'Rechazados', value: counts.rejected, bg: 'bg-rose-500/10',    text: 'text-rose-400',    status: 'REJECTED' },
         ].map((s) => (
           <button
             key={s.status}
             onClick={() => setFilterStatus(filterStatus === s.status ? 'ALL' : s.status)}
             className={`p-4 rounded-xl border transition-all text-left ${
-              filterStatus === s.status ? `${s.bg} border-current ${s.text}` : 'bg-card/60 border-border/50 hover:border-primary/20'
+              filterStatus === s.status
+                ? `${s.bg} border-current ${s.text}`
+                : 'bg-card/60 border-border/50 hover:border-primary/20'
             }`}
           >
-            <p className={`text-2xl font-bold ${filterStatus === s.status ? '' : 'text-foreground'}`}>{s.value}</p>
-            <p className={`text-xs mt-0.5 ${filterStatus === s.status ? '' : 'text-muted-foreground'}`}>{s.label}</p>
+            <p className={`text-2xl font-bold ${filterStatus === s.status ? '' : 'text-foreground'}`}>
+              {s.value}
+            </p>
+            <p className={`text-xs mt-0.5 ${filterStatus === s.status ? '' : 'text-muted-foreground'}`}>
+              {s.label}
+            </p>
           </button>
         ))}
       </div>
 
+      {/* Table */}
       <Card className="bg-card/60 backdrop-blur border-border/50">
         <CardContent className="p-0">
           {loading ? (
@@ -177,6 +215,7 @@ export default function LoansPage() {
                   <tr className="border-b border-border/50 text-xs text-muted-foreground uppercase tracking-wide">
                     <th className="text-left px-6 py-3">Cliente</th>
                     <th className="text-left px-6 py-3">Monto</th>
+                    <th className="text-left px-6 py-3">Cuota/mes</th>
                     <th className="text-left px-6 py-3">Plazo</th>
                     <th className="text-left px-6 py-3">Fecha</th>
                     <th className="text-left px-6 py-3">Estado</th>
@@ -185,23 +224,39 @@ export default function LoansPage() {
                 </thead>
                 <tbody>
                   {filtered.map((loan) => {
-                    const statusKey = (loan.status || loan.estado || 'PENDING').toUpperCase();
+                    const statusKey = (loan.status || 'PENDING').toUpperCase();
                     const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.PENDING;
                     const StatusIcon = cfg.icon;
-                    const isPending = ['PENDING', 'PENDIENTE'].includes(statusKey);
+                    const isPending = statusKey === 'PENDING';
                     const date = loan.createdAt || loan.fecha;
+
+                    // Nombre del cliente desde el mapa
+                    const clientName = clientMap[loan.idUsuario] || loan.idUsuario || '—';
+
+                    const currency = loan.currency || 'GTQ';
+                    const fmtMoney = (v) =>
+                      new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(v || 0);
+
                     return (
-                      <tr key={loan._id || loan.id} className="border-b border-border/30 hover:bg-background/40 transition-colors">
-                        <td className="px-6 py-4 font-medium">{loan.clientName || loan.userName || loan.userId || '—'}</td>
-                        <td className="px-6 py-4 font-mono">
-                          {new Intl.NumberFormat('en-US', { style: 'currency', currency: loan.currency || 'GTQ' }).format(loan.amount || loan.monto || 0)}
+                      <tr
+                        key={loan._id || loan.id}
+                        className="border-b border-border/30 hover:bg-background/40 transition-colors"
+                      >
+                        <td className="px-6 py-4 font-medium">{clientName}</td>
+                        <td className="px-6 py-4 font-mono">{fmtMoney(loan.amount)}</td>
+                        <td className="px-6 py-4 font-mono text-muted-foreground">
+                          {loan.monthlyPayment ? fmtMoney(loan.monthlyPayment) : '—'}
                         </td>
-                        <td className="px-6 py-4 text-muted-foreground">{loan.term || loan.plazo ? `${loan.term || loan.plazo} meses` : '—'}</td>
+                        <td className="px-6 py-4 text-muted-foreground">
+                          {loan.termMonths ? `${loan.termMonths} meses` : '—'}
+                        </td>
                         <td className="px-6 py-4 text-muted-foreground">
                           {date ? format(new Date(date), 'dd/MM/yyyy') : '—'}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}
+                          >
                             <StatusIcon className="w-3 h-3" />
                             {cfg.label}
                           </span>
@@ -239,6 +294,7 @@ export default function LoansPage() {
       {rejectTarget && (
         <RejectModal
           loan={rejectTarget}
+          clientName={clientMap[rejectTarget.idUsuario] || rejectTarget.idUsuario || '—'}
           onClose={() => setRejectTarget(null)}
           onConfirm={handleReject}
         />

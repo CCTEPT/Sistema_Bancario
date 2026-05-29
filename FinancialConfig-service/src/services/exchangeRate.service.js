@@ -2,8 +2,15 @@ import ExchangeRate from '../models/exchangeRate.model.js'
 
 class ExchangeRateService {
   async setRate(from, to, rate) {
+    const fromCurrency = from.toUpperCase()
+    const toCurrency = to.toUpperCase()
+
+    if (fromCurrency === toCurrency) {
+      throw new Error('La moneda origen y destino deben ser distintas')
+    }
+
     return ExchangeRate.findOneAndUpdate(
-      { from: from.toUpperCase(), to: to.toUpperCase() },
+      { from: fromCurrency, to: toCurrency },
       { rate, effectiveDate: new Date() },
       { upsert: true, new: true }
     )

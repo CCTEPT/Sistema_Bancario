@@ -429,5 +429,52 @@ public class AuthService(
 
         return MapToUserResponseDto(user);
     }
+
+    public async Task<RegisterResponseDto> UpdateProfileAsync(string userId, UpdateProfileDto dto)
+{
+    var user = await userRepository.GetByIdAsync(userId)
+        ?? throw new BusinessException(ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado");
+
+    // Validar username único solo si cambió
+    if (user.Username != dto.Username)
+    {
+        if (await userRepository.ExistsByUsernameAsync(dto.Username))
+        {
+            logger.LogRegistrationWithExistingUsername();
+            throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "El nombre de usuario ya existe");
+        }
+    }
+
+    user.Name    = dto.Name;
+    user.Surname = dto.Surname;
+    user.Username = dto.Username;
+
+    if (user.UserProfile != null)
+    {
+        user.UserProfile.Phone = dto.Phone;
+
+        if (dto.ProfilePicture != null && dto.ProfilePicture.Size > 0)
+        {
+            var (isValid, errorMessage) = FileValidator.ValidateImage(dto.ProfilePicture);
+            if (!isValid)
+                throw new BusinessException(ErrorCodes.INVALID_FILE_FORMAT, errorMessage!);
+
+            var fileName = FileValidator.GenerateSecureFileName(dto.ProfilePicture.FileName);
+            user.UserProfile.ProfilePicture = await _cloudinaryService.UploadImageAsync(dto.ProfilePicture, fileName);
+        }
+    }
+
+    await userRepository.UpdateAsync(user);
+
+    logger.LogInformation("Profile updated successfully for user {Username}", user.Username);
+
+    return new RegisterResponseDto
+    {
+        Success = true,
+        Message = "Perfil actualizado exitosamente",
+        EmailVerificationRequired = false,
+        User = MapToUserResponseDto(user)
+    };
+}
 }
 

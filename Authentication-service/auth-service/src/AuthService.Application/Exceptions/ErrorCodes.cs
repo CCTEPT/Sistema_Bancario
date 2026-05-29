@@ -9,4 +9,5 @@ public static class ErrorCodes
     public const string IMAGE_UPLOAD_FAILED = "IMAGE_UPLOAD_FAILED";
     public const string INVALID_FILE_FORMAT = "INVALID_FILE_FORMAT";
     public const string FILE_TOO_LARGE = "FILE_TOO_LARGE";
+    public const string USER_NOT_FOUND = "USER_NOT_FOUND";
 }

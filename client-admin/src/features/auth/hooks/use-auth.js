@@ -17,7 +17,7 @@ export function useAuth() {
     };
 
     const logout = () => {
-        removeAuthToken();
+        localStorage.clear();
         setTokenState(null);
     };
 

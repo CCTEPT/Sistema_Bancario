@@ -10,7 +10,7 @@ import {
   getRateSchema,
   listRatesSchema
 } from '../schemas/exchange.schema.js'
-import authMiddleware from '../middlewares/auth.middleware.js'
+import authMiddleware, { allowRoles } from '../middlewares/auth.middleware.js'
 
 export default async function exchangeRoutes(fastify, options) {
 
@@ -18,7 +18,7 @@ export default async function exchangeRoutes(fastify, options) {
   fastify.post(
     '/rate',
     {
-      preHandler: authMiddleware,
+      preHandler: [authMiddleware, allowRoles(['ADMIN_ROLE', 'EMPLOYEE_ROLE'])],
       schema: {
         tags: ['Exchange'],
         security: [{ bearerAuth: [] }],

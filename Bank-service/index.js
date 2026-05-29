@@ -13,7 +13,7 @@ import cors from '@fastify/cors'
 import { connectDB } from './configs/db.js'
 import accountRoutes from './src/routes/account.routes.js'
 import movementRoutes from './src/routes/movement.routes.js'
-// transferRoutes ya no se usa: la operación de transferencia forma parte de movements
+import loanRoutes from './src/routes/loan.routes.js'
 import checkRoutes from './src/routes/check.routes.js'
 import authorizeRole from "./src/middlewares/role.middleware.js"
 
@@ -74,6 +74,7 @@ await app.register(accountRoutes, { prefix: '/api/accounts' })
 await app.register(movementRoutes, { prefix: '/api/movements' })
 // la ruta de transferencias individual fue eliminada, usa POST /api/movements/transfer
 await app.register(checkRoutes, { prefix: '/api/checks' })
+await app.register(loanRoutes, { prefix: '/api/loans' })
 
 const start = async () => {
   try {

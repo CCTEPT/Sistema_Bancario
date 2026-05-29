@@ -13,6 +13,34 @@ export async function createBankAccount({ tipoCuenta, divisa }) {
   return data;
 }
 
+export async function getAllAccounts() {
+  const { data } = await axiosBank.get('/accounts/manage');
+  return data;
+}
+
+export async function getAccountRequests() {
+  const { data } = await axiosBank.get('/accounts/requests');
+  return data;
+}
+
+export async function approveAccountRequest(requestId) {
+  const { data } = await axiosBank.post(`/accounts/requests/${requestId}/approve`, {});
+  return data;
+}
+
+export async function rejectAccountRequest(requestId, reason) {
+  const { data } = await axiosBank.post(
+    `/accounts/requests/${requestId}/reject`,
+    { reason: reason || 'Solicitud rechazada por el administrador' }
+  );
+  return data;
+}
+
+export async function updateAccountStatus(accountId, estado) {
+  const { data } = await axiosBank.patch(`/accounts/${accountId}/status`, { estado });
+  return data;
+}
+
 export async function withdrawFromAccount({ accountId, amount, description, channel = 'APP' }) {
   const payload = {
     accountId,
@@ -93,4 +121,24 @@ export async function cashCheck({ checkNumber, receivingAccountId }) {
     receivingAccountId,
   });
   return data;
+}
+
+export async function requestLoan({ accountId, amount, termMonths, description }) {
+  const { data } = await axiosBank.post('/loans', {
+    accountId,
+    amount,
+    termMonths,
+    description,
+  });
+  return data;
+}
+
+export async function getUserLoans() {
+  const { data } = await axiosBank.get('/loans');
+  return data;
+}
+
+export async function payLoan({ loanId, accountId, amount }) {
+  const { data } = await axiosBank.patch(`/loans/${loanId}/pay`, { accountId, amount })
+  return data
 }

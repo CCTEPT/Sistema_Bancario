@@ -15,9 +15,9 @@ export async function depositController(request, reply) {
             data: movement
         })
     } catch (error) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
             status: 'Error',
-            message: error.message 
+            message: error.message
         })
     }
 }
@@ -33,9 +33,9 @@ export async function withdrawController(request, reply) {
             data: movement
         })
     } catch (error) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
             status: 'Error',
-            message: error.message 
+            message: error.message
         })
     }
 }
@@ -51,9 +51,9 @@ export async function transferController(request, reply) {
             data: result
         })
     } catch (error) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
             status: 'Error',
-            message: error.message 
+            message: error.message
         })
     }
 }
@@ -61,7 +61,12 @@ export async function transferController(request, reply) {
 export async function historyController(request, reply) {
     try {
         const { accountId } = request.params
-        const movements = await getMovementsByAccount(accountId, request.query)
+        const movements = await getMovementsByAccount(
+            accountId,
+            request.query,
+            request.user.sub,  
+            request.user.role   
+        )
         return reply.send({ status: 'Success', data: movements })
     } catch (error) {
         return reply.code(400).send({ status: 'Error', message: error.message })

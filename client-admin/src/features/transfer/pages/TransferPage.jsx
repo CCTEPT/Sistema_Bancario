@@ -15,7 +15,7 @@ export default function TransferPage() {
   const [accountsError, setAccountsError] = useState(null);
   const [isPending, setIsPending] = useState(false);
   const [fromAccountId, setFromAccountId] = useState("");
-  const [destinationAccountNumber, setDestinationAccountNumber] = useState("");
+  const [destinationAccountId, setDestinationAccountId] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [success, setSuccess] = useState(false);
@@ -26,8 +26,13 @@ export default function TransferPage() {
 
   const ownerName = user?.name || user?.username || user?.email || "Usuario";
   const fromAccount = accounts.find((a) => String(a.id) === fromAccountId);
+  const destinationAccount = null;
   const numAmount = parseFloat(amount);
   const hasInsufficientFunds = fromAccount && !Number.isNaN(numAmount) && numAmount > fromAccount.balance;
+  const isSameAccountSelected = fromAccount && destinationAccountId && fromAccount.accountNumber === destinationAccountId;
+  const conversionNote = fromAccount && destinationAccount && fromAccount.currency !== destinationAccount.currency
+    ? `Se convertirá de ${fromAccount.currency} a ${destinationAccount.currency}`
+    : "Transferencia en la misma divisa";
 
   const showToast = (title, description, variant = "default") => {
     setToastMsg({ title, description, variant });
@@ -65,11 +70,9 @@ export default function TransferPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const destinationAccount = destinationAccountNumber.trim();
+    if (!fromAccountId || !destinationAccountId || !amount) return;
 
-    if (!fromAccountId || !destinationAccount || !amount) return;
-
-    if (fromAccount?.accountNumber === destinationAccount) {
+    if (isSameAccountSelected) {
       showToast("Transferencia invalida", "La cuenta origen y destino deben ser distintas.", "destructive");
       return;
     }
@@ -87,24 +90,29 @@ export default function TransferPage() {
     setIsPending(true);
 
     try {
-      await transferBetweenAccounts({
+      const response = await transferBetweenAccounts({
         sourceAccount: fromAccount.id,
-        destinationAccount,
+        destinationAccount: destinationAccountId,
         amount: numAmount,
         description,
       });
 
       setAccounts((prevAccounts) =>
-        prevAccounts.map((account) =>
-          account.id === fromAccount.id
-            ? { ...account, balance: account.balance - numAmount }
-            : account
-        )
-      );
+        prevAccounts.map((account) => {
+          if (account.id === fromAccount.id) {
+            return { ...account, balance: account.balance - numAmount };
+          }
 
-      setSuccess(true);
+          if (destinationAccount && account.id === destinationAccount.id) {
+            const receivedAmount = response?.transferIn?.amount ?? numAmount;
+            return { ...account, balance: account.balance + receivedAmount };
+          }
+
+          return account;
+        })
+      );
       setAmount("");
-      setDestinationAccountNumber("");
+      setDestinationAccountId("");
       setDescription("");
       showToast(
         "Transferencia completada",
@@ -133,11 +141,10 @@ export default function TransferPage() {
 
       {toastMsg && (
         <div
-          className={`text-sm px-4 py-3 rounded-lg border ${
-            toastMsg.variant === "destructive"
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
-              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-          }`}
+          className={`text-sm px-4 py-3 rounded-lg border ${toastMsg.variant === "destructive"
+            ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+            : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+            }`}
         >
           <p className="font-semibold">{toastMsg.title}</p>
           <p className="text-xs mt-0.5 opacity-80">{toastMsg.description}</p>
@@ -150,7 +157,7 @@ export default function TransferPage() {
             <ArrowRightLeft className="h-5 w-5 text-primary" />
             New Transfer
           </CardTitle>
-          <CardDescription>Selecciona tu cuenta origen e ingresa el numero de cuenta destino.</CardDescription>
+          <CardDescription>Selecciona tu cuenta origen y elige tu cuenta destino, incluso si es USD.</CardDescription>
           {accountsLoading ? (
             <p className="text-sm text-muted-foreground mt-2">Cargando tus cuentas...</p>
           ) : accountsError ? (
@@ -197,16 +204,23 @@ export default function TransferPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="destination-account">Destination Account Number</Label>
+              <Label htmlFor="destination-account">Destination Account</Label>
               <Input
                 id="destination-account"
-                data-testid="input-destination-account"
-                placeholder="NB123456789012"
-                value={destinationAccountNumber}
-                onChange={(e) => setDestinationAccountNumber(e.target.value)}
+                data-testid="select-destination-account"
+                placeholder="Número de cuenta destino"
+                value={destinationAccountId}
+                onChange={(e) => setDestinationAccountId(e.target.value)}
+                disabled={!fromAccountId}
                 className="bg-background/50 font-mono"
               />
             </div>
+            {destinationAccount && (
+              <div className="rounded-lg border border-border/50 bg-background/60 p-3 text-sm text-muted-foreground">
+                <p>Destino: {destinationAccountId}</p>
+                <p>{conversionNote}</p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="amount">Amount {fromAccount ? `(${fromAccount.currency})` : ""}</Label>
@@ -253,8 +267,9 @@ export default function TransferPage() {
                 isPending ||
                 accountsLoading ||
                 !fromAccountId ||
-                !destinationAccountNumber ||
+                !destinationAccountId ||
                 !amount ||
+                isSameAccountSelected ||
                 !!hasInsufficientFunds
               }
               variant={hasInsufficientFunds ? "destructive" : "default"}

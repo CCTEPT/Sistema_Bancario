@@ -4,6 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getClients, createAccountForClient } from '@/shared/apis/employee.js';
 import toast from 'react-hot-toast';
 
+function generateAccountNumber() {
+  const digits = Math.floor(Math.random() * 1_000_000_000_000).toString().padStart(12, '0');
+  return `NB${digits}`;
+}
+
 export default function CreateAccountPage() {
   const [clients, setClients] = useState([]);
   const [clientSearch, setClientSearch] = useState('');
@@ -11,7 +16,6 @@ export default function CreateAccountPage() {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
-  const [numeroCuenta, setNumeroCuenta] = useState('');
   const [tipoCuenta, setTipoCuenta] = useState('ahorro');
   const [divisa, setDivisa] = useState('GTQ');
 
@@ -39,15 +43,11 @@ export default function CreateAccountPage() {
       toast.error('Selecciona un cliente primero.');
       return;
     }
-    if (!numeroCuenta.trim()) {
-      toast.error('Debes ingresar un número de cuenta.');
-      return;
-    }
     try {
       setSubmitting(true);
       const result = await createAccountForClient({
         idUsuario: selectedClient.id || selectedClient._id,
-        numeroCuenta,
+        numeroCuenta: generateAccountNumber(),
         tipoCuenta,
         divisa,
       });
@@ -55,13 +55,13 @@ export default function CreateAccountPage() {
       toast.success('Cuenta creada correctamente.');
       setSelectedClient(null);
       setClientSearch('');
-      setNumeroCuenta('');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al crear la cuenta.');
     } finally {
       setSubmitting(false);
     }
   };
+
   return (
     <div className='space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-500 max-w-3xl'>
       <div>
@@ -93,7 +93,7 @@ export default function CreateAccountPage() {
       )}
 
       <div className='grid gap-6 md:grid-cols-2'>
-        {/* Client selector */}
+        {/* Selector de cliente */}
         <Card className='bg-card/60 backdrop-blur border-border/50'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base font-semibold flex items-center gap-2'>
@@ -146,7 +146,7 @@ export default function CreateAccountPage() {
           </CardContent>
         </Card>
 
-        {/* Confirm panel */}
+        {/* Panel de confirmación */}
         <Card className='bg-card/60 backdrop-blur border-border/50'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-base font-semibold flex items-center gap-2'>
@@ -176,13 +176,6 @@ export default function CreateAccountPage() {
 
             {selectedClient && (
               <div className='space-y-3'>
-                <input
-                  value={numeroCuenta}
-                  onChange={(e) => setNumeroCuenta(e.target.value)}
-                  placeholder='Número de cuenta'
-                  className='w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/50 outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all'
-                />
-
                 <select
                   value={tipoCuenta}
                   onChange={(e) => setTipoCuenta(e.target.value)}
@@ -197,9 +190,9 @@ export default function CreateAccountPage() {
                   onChange={(e) => setDivisa(e.target.value)}
                   className='w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/50 outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all'
                 >
-                  <option value='GTQ'>Quetzales</option>
-                  <option value='USD'>Dólares</option>
-                  <option value='EUR'>Euros</option>
+                  <option value='GTQ'>Quetzales (GTQ)</option>
+                  <option value='USD'>Dólares (USD)</option>
+                  <option value='EUR'>Euros (EUR)</option>
                 </select>
               </div>
             )}
