@@ -23,19 +23,12 @@ const DEMO_USERS = {
     email: 'carlos@novabank.dev',
     role: 'ADMIN_ROLE',
   },
-  USER_ROLE: {
-    id: 'demo-user-001',
-    name: 'Ana',
-    surname: 'López',
-    username: 'alopez',
-    email: 'ana@novabank.dev',
-    role: 'USER_ROLE',
-  },
 };
 
+const ALLOWED_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE'];
+
 const LoginScreen = ({ navigation }) => {
-  const { login, loading, error } = useAuthStore();
-  const [demoMode, setDemoMode] = useState(false);
+  const { login, logout, loading, error } = useAuthStore();
 
   const {
     control,
@@ -50,21 +43,26 @@ const LoginScreen = ({ navigation }) => {
 
   const onSubmit = async (data) => {
     const result = await login(data);
-    if (result.success) {
-      // Navigation will be handled by AppNavigator based on auth state
-    } else {
+
+    if (!result.success) {
       Alert.alert('Error', result.error || 'Error al iniciar sesión');
+      return;
     }
+
+    const role = useAuthStore.getState().role;
+
+    if (!ALLOWED_ROLES.includes(role)) {
+      await logout();
+      Alert.alert(
+        'Acceso denegado',
+        'Esta aplicación es exclusiva para empleados y administradores del banco.'
+      );
+    }
+    // Si el rol es válido, AppNavigator redirige automáticamente al Drawer
   };
 
   const handleForgotPassword = () => {
-    // Implement in next phase
     Alert.alert('Próxima fase', 'Recuperación de contraseña se implementará en la siguiente fase');
-  };
-
-  const handleRegister = () => {
-    // Implement in next phase
-    Alert.alert('Próxima fase', 'Registro se implementará en la siguiente fase');
   };
 
   const enterDemo = (role) => {
@@ -76,7 +74,6 @@ const LoginScreen = ({ navigation }) => {
       isLoadingAuth: false,
       role,
     });
-    Alert.alert('Demo', `Entrando como ${user.name} (${role.replace('_ROLE', '')})`);
   };
 
   return (
@@ -132,7 +129,6 @@ const LoginScreen = ({ navigation }) => {
               size="large"
             />
 
-            {/* Demo access */}
             <View style={styles.demoSection}>
               <Text style={styles.demoTitle}>— Acceso demo (sin backend) —</Text>
               <View style={styles.demoButtons}>
@@ -148,20 +144,8 @@ const LoginScreen = ({ navigation }) => {
                   variant="primary"
                   size="small"
                 />
-                <Button
-                  title="Cliente"
-                  onPress={() => enterDemo('USER_ROLE')}
-                  variant="ghost"
-                  size="small"
-                />
               </View>
             </View>
-
-            <Text style={styles.registerText}>
-              <Text onPress={handleRegister} style={styles.link}>
-                ¿No tienes cuenta? Inicializa una
-              </Text>
-            </Text>
           </View>
         </View>
       </ScrollView>
@@ -227,11 +211,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: theme.spacing.sm,
-  },
-  registerText: {
-    textAlign: 'center',
-    fontSize: theme.fontSize.sm,
-    marginTop: theme.spacing.lg,
   },
 });
 

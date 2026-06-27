@@ -6,7 +6,6 @@ import { getClients, getAllMovements, getLoans } from '../../../shared/api/emplo
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../shared/components/common/Card';
 import Button from '../../../shared/components/common/Button';
-import Badge from '../../../shared/components/common/Badge';
 import LoadingSpinner from '../../../shared/components/common/LoadingSpinner';
 import theme from '../../../shared/constants/theme';
 
@@ -22,33 +21,22 @@ const TX_TYPE = {
 
 const buildChartData = (transactions) => {
   if (!transactions || transactions.length === 0) {
-    return { labels: [], datasets: [{ data: [] }] };
+    return { labels: [''], datasets: [{ data: [0] }] };
   }
 
   const byDay = {};
-  const days = [];
-  
+
   transactions.forEach((tx) => {
     const date = tx.date || tx.createdAt || tx.updatedAt;
     if (!date) return;
-
     const day = new Date(date).toLocaleDateString('es-GT', { day: 'numeric', month: 'short' });
-    if (!byDay[day]) byDay[day] = { day, count: 0, amount: 0 };
-    byDay[day].count += 1;
+    if (!byDay[day]) byDay[day] = { day, amount: 0 };
     byDay[day].amount += Number(tx.amount || 0);
   });
 
-  // Get last 7 days
-  const sortedDays = Object.values(byDay)
-    .sort((a, b) => {
-      const dateA = new Date(a.day + ' 2024');
-      const dateB = new Date(b.day + ' 2024');
-      return dateA - dateB;
-    })
-    .slice(-7);
-
-  const labels = sortedDays.map(d => d.day);
-  const data = sortedDays.map(d => d.amount);
+  const sortedDays = Object.values(byDay).slice(-7);
+  const labels = sortedDays.map((d) => d.day);
+  const data = sortedDays.map((d) => d.amount);
 
   return { labels, datasets: [{ data }] };
 };
@@ -139,23 +127,27 @@ const EmployeeDashboardScreen = ({ navigation }) => {
     </Card>
   );
 
-  const renderTransactionItem = (tx) => {
-    const cfg = TX_TYPE[tx.movementType] || { label: tx.movementType, color: theme.colors.textMuted, bg: `${theme.colors.textMuted}20` };
+  const renderTransactionItem = (tx, index) => {
+    const cfg = TX_TYPE[tx.movementType] || {
+      label: tx.movementType || 'Movimiento',
+      color: theme.colors.textMuted,
+      bg: `${theme.colors.textMuted}20`,
+    };
+
+    const iconName = cfg.label === 'Depósito'
+      ? 'arrow-downward'
+      : cfg.label === 'Retiro'
+      ? 'arrow-upward'
+      : 'swap-horiz';
 
     return (
-      <View style={styles.transactionItem}>
+      <View key={tx._id || tx.id || index} style={styles.transactionItem}>
         <View style={[styles.txIcon, { backgroundColor: cfg.bg }]}>
-          <MaterialIcons 
-            name={cfg.label === 'Depósito' ? 'arrow-downward' : cfg.label === 'Retiro' ? 'arrow-upward' : 'swap-horiz'} 
-            size={16} 
-            color={cfg.color} 
-          />
+          <MaterialIcons name={iconName} size={16} color={cfg.color} />
         </View>
         <View style={styles.txInfo}>
           <Text style={styles.txType}>{cfg.label}</Text>
-          <Text style={styles.txMeta}>
-            {tx.accountNumber || tx.channel || 'APP'}
-          </Text>
+          <Text style={styles.txMeta}>{tx.accountNumber || tx.channel || 'APP'}</Text>
           <Text style={styles.txDate}>{formatDate(tx.date || tx.createdAt)}</Text>
         </View>
         <Text style={[styles.txAmount, { color: cfg.color }]}>
@@ -173,14 +165,15 @@ const EmployeeDashboardScreen = ({ navigation }) => {
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{greeting()}</Text>
-            <Text style={styles.userName}>
-              {user?.name ? user.name.split(' ')[0] : user?.username || 'Empleado'}
-            </Text>
-            <Text style={styles.userRole}>Panel de operaciones — gestiona clientes y operaciones del banco</Text>
-          </View>
+          <Text style={styles.greeting}>{greeting()}</Text>
+          <Text style={styles.userName}>
+            {user?.name ? user.name.split(' ')[0] : user?.username || 'Empleado'}
+          </Text>
+          <Text style={styles.userRole}>
+            Panel de operaciones — gestiona clientes y operaciones del banco
+          </Text>
         </View>
+
         <View style={styles.statsGrid}>
           {renderStatCard(
             'Clientes registrados',
@@ -219,18 +212,16 @@ const EmployeeDashboardScreen = ({ navigation }) => {
           {recentTx.length > 0 ? (
             <LineChart
               data={buildChartData(recentTx)}
-              width={screenWidth - theme.spacing.lg * 2}
+              width={screenWidth - theme.spacing.lg * 4}
               height={180}
               chartConfig={{
                 backgroundColor: theme.colors.surface,
                 backgroundGradientFrom: theme.colors.surface,
                 backgroundGradientTo: theme.colors.surface,
-                decimalPlaces: 2,
-                color: (opacity = 1) => theme.colors.primary,
-                labelColor: theme.colors.textSecondary,
-                style: {
-                  borderRadius: theme.borderRadius.md,
-                },
+                decimalPlaces: 0,
+                color: () => theme.colors.primary,
+                labelColor: () => theme.colors.textSecondary,
+                style: { borderRadius: theme.borderRadius.md },
               }}
               bezier
               style={styles.chart}
@@ -247,7 +238,6 @@ const EmployeeDashboardScreen = ({ navigation }) => {
           <View style={styles.activityHeader}>
             <Text style={styles.activityTitle}>Actividad reciente</Text>
           </View>
-
           {recentTx.length === 0 ? (
             <View style={styles.emptyActivity}>
               <MaterialIcons name="swap-horiz" size={32} color={theme.colors.textMuted} />
@@ -255,7 +245,7 @@ const EmployeeDashboardScreen = ({ navigation }) => {
             </View>
           ) : (
             <View style={styles.transactionsList}>
-              {recentTx.map((tx, i) => renderTransactionItem(tx))}
+              {recentTx.map((tx, i) => renderTransactionItem(tx, i))}
             </View>
           )}
         </Card>
@@ -299,169 +289,43 @@ const EmployeeDashboardScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    padding: theme.spacing.lg,
-  },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
-  greeting: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  userName: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.text,
-  },
-  userRole: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: 140,
-  },
-  statHeader: {
-    marginBottom: theme.spacing.sm,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statTitle: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-  },
-  statValue: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  statSubtitle: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
-  },
-  chartCard: {
-    marginBottom: theme.spacing.lg,
-  },
-  chartHeader: {
-    marginBottom: theme.spacing.md,
-  },
-  chartTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  chartSubtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-  chart: {
-    borderRadius: theme.borderRadius.md,
-  },
-  emptyChart: {
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  emptyChartText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.sm,
-  },
-  activityCard: {
-    marginBottom: theme.spacing.lg,
-  },
-  activityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  activityTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.text,
-  },
-  emptyActivity: {
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.sm,
-  },
-  transactionsList: {
-    gap: theme.spacing.sm,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-  },
-  txIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.sm,
-  },
-  txInfo: {
-    flex: 1,
-  },
-  txType: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.medium,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  txMeta: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
-  },
-  txDate: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
-  },
-  txAmount: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
-  },
-  quickActions: {
-    marginBottom: theme.spacing.lg,
-  },
-  quickActionsTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  quickActionsGrid: {
-    gap: theme.spacing.sm,
-  },
-  quickActionButton: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { padding: theme.spacing.lg },
+  header: { marginBottom: theme.spacing.lg },
+  greeting: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary },
+  userName: { fontSize: theme.fontSize.xxl, fontWeight: theme.fontWeight.bold, color: theme.colors.text },
+  userRole: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md, marginBottom: theme.spacing.lg },
+  statCard: { flex: 1, minWidth: 140 },
+  statHeader: { marginBottom: theme.spacing.sm },
+  iconContainer: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  statTitle: { fontSize: theme.fontSize.xs, color: theme.colors.textSecondary, marginBottom: theme.spacing.xs },
+  statValue: { fontSize: theme.fontSize.xl, fontWeight: theme.fontWeight.bold, color: theme.colors.text, marginBottom: theme.spacing.xs },
+  statSubtitle: { fontSize: theme.fontSize.xs, color: theme.colors.textMuted },
+  chartCard: { marginBottom: theme.spacing.lg },
+  chartHeader: { marginBottom: theme.spacing.md },
+  chartTitle: { fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.semibold, color: theme.colors.text, marginBottom: theme.spacing.xs },
+  chartSubtitle: { fontSize: theme.fontSize.sm, color: theme.colors.textSecondary },
+  chart: { borderRadius: theme.borderRadius.md },
+  emptyChart: { alignItems: 'center', padding: theme.spacing.xl },
+  emptyChartText: { fontSize: theme.fontSize.sm, color: theme.colors.textMuted, marginTop: theme.spacing.sm },
+  activityCard: { marginBottom: theme.spacing.lg },
+  activityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md },
+  activityTitle: { fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.semibold, color: theme.colors.text },
+  emptyActivity: { alignItems: 'center', padding: theme.spacing.xl },
+  emptyText: { fontSize: theme.fontSize.sm, color: theme.colors.textMuted, marginTop: theme.spacing.sm },
+  transactionsList: { gap: theme.spacing.sm },
+  transactionItem: { flexDirection: 'row', alignItems: 'center', padding: theme.spacing.sm, backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.md },
+  txIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: theme.spacing.sm },
+  txInfo: { flex: 1 },
+  txType: { fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.medium, color: theme.colors.text, marginBottom: theme.spacing.xs },
+  txMeta: { fontSize: theme.fontSize.xs, color: theme.colors.textMuted },
+  txDate: { fontSize: theme.fontSize.xs, color: theme.colors.textMuted },
+  txAmount: { fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.bold },
+  quickActions: { marginBottom: theme.spacing.lg },
+  quickActionsTitle: { fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.semibold, color: theme.colors.text, marginBottom: theme.spacing.md },
+  quickActionsGrid: { gap: theme.spacing.sm },
+  quickActionButton: { flex: 1 },
 });
 
 export default EmployeeDashboardScreen;

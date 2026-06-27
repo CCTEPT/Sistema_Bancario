@@ -6,7 +6,7 @@ import AuthStack from './AuthStack';
 import AdminDrawer from './AdminDrawer';
 
 const AppNavigator = () => {
-  const { isAuthenticated, isAdmin, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, isAdmin, isEmployee, _hasHydrated } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const AppNavigator = () => {
     );
   }
 
-  if (!isAdmin()) {
+  if (!isAdmin() && !isEmployee()) {
     return (
       <NavigationContainer>
         <AuthStack />
