@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getClients, createAccountForClient } from '../../../shared/api/employeeClient';
+import { getApiErrorMessage } from '../../../shared/utils/apiErrorMessage';
 import Card from '../../../shared/components/common/Card';
 import Button from '../../../shared/components/common/Button';
 import LoadingSpinner from '../../../shared/components/common/LoadingSpinner';
@@ -79,7 +80,7 @@ const CreateAccountScreen = ({ navigation }) => {
       setSelectedClient(null);
       setClientSearch('');
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Error al crear la cuenta');
+      Alert.alert('Error', getApiErrorMessage(err, 'Error al crear la cuenta'));
     } finally {
       setSubmitting(false);
     }

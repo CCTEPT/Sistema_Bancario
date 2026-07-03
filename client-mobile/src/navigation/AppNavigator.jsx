@@ -4,40 +4,40 @@ import LoadingSpinner from '../shared/components/common/LoadingSpinner';
 import { useAuthStore } from '../store/authStore';
 import AuthStack from './AuthStack';
 import AdminDrawer from './AdminDrawer';
+import UserDrawer from './UserDrawer';
 
 const AppNavigator = () => {
-  const { isAuthenticated, isAdmin, isEmployee, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, isAdmin, isEmployee, isUser, _hasHydrated } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (_hasHydrated) {
       setIsReady(true);
+      return;
     }
+
+    const hydrationTimeout = setTimeout(() => {
+      setIsReady(true);
+    }, 1500);
+
+    return () => clearTimeout(hydrationTimeout);
   }, [_hasHydrated]);
 
   if (!isReady) {
     return <LoadingSpinner fullScreen text="Cargando..." />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <NavigationContainer>
-        <AuthStack />
-      </NavigationContainer>
-    );
-  }
-
-  if (!isAdmin() && !isEmployee()) {
-    return (
-      <NavigationContainer>
-        <AuthStack />
-      </NavigationContainer>
-    );
-  }
-
   return (
     <NavigationContainer>
-      <AdminDrawer />
+      {!isAuthenticated ? (
+        <AuthStack />
+      ) : isUser() ? (
+        <UserDrawer />
+      ) : !isAdmin() && !isEmployee() ? (
+        <AuthStack />
+      ) : (
+        <AdminDrawer />
+      )}
     </NavigationContainer>
   );
 };

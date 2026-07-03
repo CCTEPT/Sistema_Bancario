@@ -25,7 +25,7 @@ const DEMO_USERS = {
   },
 };
 
-const ALLOWED_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE'];
+const ALLOWED_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE', 'USER_ROLE'];
 
 const LoginScreen = ({ navigation }) => {
   const { login, logout, loading, error } = useAuthStore();
@@ -55,14 +55,18 @@ const LoginScreen = ({ navigation }) => {
       await logout();
       Alert.alert(
         'Acceso denegado',
-        'Esta aplicación es exclusiva para empleados y administradores del banco.'
+        'Rol no autorizado para esta aplicación.'
       );
     }
-    // Si el rol es válido, AppNavigator redirige automáticamente al Drawer
+    // Si el rol es válido, AppNavigator redirige automáticamente al Drawer correspondiente
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Próxima fase', 'Recuperación de contraseña se implementará en la siguiente fase');
+    navigation.navigate('ForgotPassword');
+  };
+
+  const handleRegister = () => {
+    navigation.navigate('Register');
   };
 
   const enterDemo = (role) => {
@@ -114,12 +118,6 @@ const LoginScreen = ({ navigation }) => {
               leftIcon="lock"
             />
 
-            <Text style={styles.forgotPassword}>
-              <Text onPress={handleForgotPassword} style={styles.link}>
-                ¿Olvidaste tu contraseña?
-              </Text>
-            </Text>
-
             {error && <Text style={styles.errorText}>{error}</Text>}
 
             <Button
@@ -128,6 +126,16 @@ const LoginScreen = ({ navigation }) => {
               disabled={loading}
               size="large"
             />
+
+            <View style={styles.authLinks}>
+              <Text onPress={handleRegister} style={styles.link}>
+                Crear cuenta
+              </Text>
+              <Text style={styles.linkSeparator}>·</Text>
+              <Text onPress={handleForgotPassword} style={styles.link}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </View>
 
             <View style={styles.demoSection}>
               <Text style={styles.demoTitle}>— Acceso demo (sin backend) —</Text>
@@ -197,6 +205,16 @@ const styles = StyleSheet.create({
   },
   link: {
     color: theme.colors.primary,
+  },
+  authLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: theme.spacing.md,
+  },
+  linkSeparator: {
+    color: theme.colors.textMuted,
+    marginHorizontal: theme.spacing.sm,
   },
   demoSection: {
     marginTop: theme.spacing.xl,

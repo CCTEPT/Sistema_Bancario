@@ -13,71 +13,41 @@ import { MaterialIcons } from '@expo/vector-icons';
 import theme from '../shared/constants/theme';
 import { useAuthStore } from '../store/authStore';
 import ProfileScreen from '../features/auth/screens/ProfileScreen';
-import AccountsScreen from '../features/accounts/screens/AccountsScreen';
-import UsersScreen from '../features/users/screens/UsersScreen';
-import ChecksScreen from '../features/checks/screens/ChecksScreen';
-import TransactionsScreen from '../features/transactions/screens/TransactionsScreen';
-import EmployeeDashboardScreen from '../features/employee/screens/EmployeeDashboardScreen';
-import ClientsScreen from '../features/employee/screens/ClientsScreen';
-import CreateAccountScreen from '../features/employee/screens/CreateAccountScreen';
-import EmployeeLoansScreen from '../features/employee/screens/EmployeeLoansScreen';
-import TransactionSupportScreen from '../features/employee/screens/TransactionSupportScreen';
-import DepositScreen from '../features/deposit/screens/DepositScreen';
-import WithdrawScreen from '../features/withdraw/screens/WithdrawScreen';
-import TransferScreen from '../features/transfer/screens/TransferScreen';
-import ConvertScreen from '../features/convert/screens/ConvertScreen';
+import UserAccountsScreen from '../features/user/screens/UserAccountsScreen';
+import UserTransactionsScreen from '../features/user/screens/UserTransactionsScreen';
+import UserTransferScreen from '../features/user/screens/UserTransferScreen';
+import UserDepositScreen from '../features/user/screens/UserDepositScreen';
+import UserWithdrawScreen from '../features/user/screens/UserWithdrawScreen';
+import UserConvertScreen from '../features/user/screens/UserConvertScreen';
+import UserChecksScreen from '../features/user/screens/UserChecksScreen';
+import UserLoansScreen from '../features/user/screens/UserLoansScreen';
+import UserDashboardScreen from '../features/user/screens/UserDashboardScreen';
 
 const Stack = createNativeStackNavigator();
 
-const ADMIN_SECTIONS = [
+const USER_SECTIONS = [
   {
-    title: 'Consultas',
+    title: 'Principal',
     items: [
-      { label: 'Dashboard', icon: 'dashboard', screen: 'Dashboard' },
-      { label: 'Cuentas', icon: 'account-balance', screen: 'Accounts' },
-      { label: 'Usuarios', icon: 'people', screen: 'Users' },
-      { label: 'Cheques', icon: 'description', screen: 'Checks' },
-      { label: 'Movimientos', icon: 'receipt-long', screen: 'Transactions' },
+      { label: 'Dashboard', icon: 'dashboard', screen: 'UserDashboard' },
+      { label: 'Mis Cuentas', icon: 'account-balance', screen: 'UserAccounts' },
+      { label: 'Transacciones', icon: 'receipt-long', screen: 'UserTransactions' },
     ],
   },
   {
     title: 'Operaciones',
     items: [
-      { label: 'Depositar', icon: 'add-circle-outline', screen: 'Deposit' },
-      { label: 'Retirar', icon: 'remove-circle-outline', screen: 'Withdraw' },
-      { label: 'Transferir', icon: 'swap-horiz', screen: 'Transfer' },
-      { label: 'Convertir', icon: 'currency-exchange', screen: 'Convert' },
+      { label: 'Transferir', icon: 'swap-horiz', screen: 'UserTransfer' },
+      { label: 'Depositar', icon: 'add-circle-outline', screen: 'UserDeposit' },
+      { label: 'Retirar', icon: 'remove-circle-outline', screen: 'UserWithdraw' },
+      { label: 'Convertir', icon: 'currency-exchange', screen: 'UserConvert' },
     ],
   },
   {
-    title: 'Perfil',
+    title: 'Servicios',
     items: [
-      { label: 'Editar perfil', icon: 'person', screen: 'Profile' },
-    ],
-  },
-];
-
-const EMPLOYEE_SECTIONS = [
-  {
-    title: 'Panel',
-    items: [
-      { label: 'Panel empleado', icon: 'work', screen: 'EmployeeDashboard' },
-    ],
-  },
-  {
-    title: 'Consultas',
-    items: [
-      { label: 'Cuentas', icon: 'account-balance', screen: 'Accounts' },
-      { label: 'Usuarios', icon: 'people', screen: 'Users' },
-    ],
-  },
-  {
-    title: 'Gestión',
-    items: [
-      { label: 'Clientes', icon: 'group', screen: 'Clients' },
-      { label: 'Abrir cuenta', icon: 'account-balance', screen: 'CreateAccount' },
-      { label: 'Gestión préstamos', icon: 'request-quote', screen: 'EmployeeLoans' },
-      { label: 'Soporte transaccional', icon: 'support-agent', screen: 'TransactionSupport' },
+      { label: 'Cheques', icon: 'description', screen: 'UserChecks' },
+      { label: 'Préstamos', icon: 'account-balance-wallet', screen: 'UserLoans' },
     ],
   },
   {
@@ -89,20 +59,15 @@ const EMPLOYEE_SECTIONS = [
 ];
 
 const STACK_SCREENS = [
-  { name: 'Dashboard', title: 'Dashboard', component: EmployeeDashboardScreen },
-  { name: 'Accounts', title: 'Cuentas', component: AccountsScreen },
-  { name: 'Users', title: 'Usuarios', component: UsersScreen },
-  { name: 'Checks', title: 'Cheques', component: ChecksScreen },
-  { name: 'Transactions', title: 'Movimientos', component: TransactionsScreen },
-  { name: 'Deposit', title: 'Depositar', component: DepositScreen },
-  { name: 'Withdraw', title: 'Retirar', component: WithdrawScreen },
-  { name: 'Transfer', title: 'Transferir', component: TransferScreen },
-  { name: 'Convert', title: 'Convertir', component: ConvertScreen },
-  { name: 'EmployeeDashboard', title: 'Panel Empleado', component: EmployeeDashboardScreen },
-  { name: 'Clients', title: 'Clientes', component: ClientsScreen },
-  { name: 'CreateAccount', title: 'Abrir Cuenta', component: CreateAccountScreen },
-  { name: 'EmployeeLoans', title: 'Gestión Préstamos', component: EmployeeLoansScreen },
-  { name: 'TransactionSupport', title: 'Soporte Transaccional', component: TransactionSupportScreen },
+  { name: 'UserDashboard', title: 'Dashboard', component: UserDashboardScreen },
+  { name: 'UserAccounts', title: 'Mis Cuentas', component: UserAccountsScreen },
+  { name: 'UserTransactions', title: 'Transacciones', component: UserTransactionsScreen },
+  { name: 'UserTransfer', title: 'Transferir', component: UserTransferScreen },
+  { name: 'UserDeposit', title: 'Depositar', component: UserDepositScreen },
+  { name: 'UserWithdraw', title: 'Retirar', component: UserWithdrawScreen },
+  { name: 'UserConvert', title: 'Convertir', component: UserConvertScreen },
+  { name: 'UserChecks', title: 'Cheques', component: UserChecksScreen },
+  { name: 'UserLoans', title: 'Préstamos', component: UserLoansScreen },
   { name: 'Profile', title: 'Perfil', component: ProfileScreen },
 ];
 
@@ -135,9 +100,7 @@ const DrawerItem = ({ label, icon, onPress, isLogout = false, isActive = false }
 );
 
 const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
-  const { user, logout, isAdmin, isEmployee } = useAuthStore();
-
-  const sections = isAdmin() ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS;
+  const { user, logout } = useAuthStore();
 
   const handleNavigate = (screen) => {
     onClose();
@@ -158,13 +121,13 @@ const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
           </View>
           <View style={styles.userDetails}>
             <Text style={styles.userName}>{user?.username || user?.email || 'Usuario'}</Text>
-            <Text style={styles.userRole}>{user?.role || ''}</Text>
+            <Text style={styles.userRole}>Cliente</Text>
           </View>
         </View>
       </View>
 
       <ScrollView style={styles.drawerContent}>
-        {sections.map((section) => (
+        {USER_SECTIONS.map((section) => (
           <View key={section.title} style={styles.drawerSection}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item) => (
@@ -187,10 +150,10 @@ const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
   );
 };
 
-const AdminDrawer = () => {
-  const { isAdmin, isEmployee } = useAuthStore();
+const UserDrawer = () => {
+  const { isUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [currentRoute, setCurrentRoute] = useState('EmployeeDashboard');
+  const [currentRoute, setCurrentRoute] = useState('UserDashboard');
   const navigationRef = useRef(null);
 
   const screenOptions = useMemo(
@@ -224,7 +187,7 @@ const AdminDrawer = () => {
               accessibilityRole="button"
               accessibilityLabel="Abrir menú"
               onPress={() => {
-                console.log('AdminDrawer: abrir menú');
+                console.log('UserDrawer: abrir menú');
                 setMenuOpen(true);
               }}
               style={styles.menuButton}
@@ -241,22 +204,20 @@ const AdminDrawer = () => {
     []
   );
 
-  if (!isAdmin() && !isEmployee()) {
+  if (!isUser()) {
     return null;
   }
-
-  const initialRoute = isEmployee() ? 'EmployeeDashboard' : 'Dashboard';
 
   return (
     <>
       <Stack.Navigator
-        initialRouteName={initialRoute}
+        initialRouteName="UserDashboard"
         screenOptions={screenOptions}
         screenListeners={{
           state: (event) => {
             const routes = event.data.state?.routes || [];
             const index = event.data.state?.index || 0;
-            setCurrentRoute(routes[index]?.name || initialRoute);
+            setCurrentRoute(routes[index]?.name || 'UserDashboard');
           },
         }}
       >
@@ -275,7 +236,7 @@ const AdminDrawer = () => {
           <Pressable
             style={styles.backdrop}
             onPress={() => {
-              console.log('AdminDrawer: cerrar menú (backdrop)');
+              console.log('UserDrawer: cerrar menú (backdrop)');
               setMenuOpen(false);
             }}
           />
@@ -407,4 +368,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminDrawer;
+export default UserDrawer;
