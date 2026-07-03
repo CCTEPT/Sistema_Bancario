@@ -29,7 +29,7 @@ import ConvertScreen from '../features/convert/screens/ConvertScreen';
 
 const Stack = createNativeStackNavigator();
 
-const DRAWER_SECTIONS = [
+const ADMIN_SECTIONS = [
   {
     title: 'Consultas',
     items: [
@@ -47,16 +47,36 @@ const DRAWER_SECTIONS = [
       { label: 'Retirar', icon: 'remove-circle-outline', screen: 'Withdraw' },
       { label: 'Transferir', icon: 'swap-horiz', screen: 'Transfer' },
       { label: 'Convertir', icon: 'currency-exchange', screen: 'Convert' },
-      { label: 'Prestamos', icon: 'account-balance-wallet', screen: 'Loans' },
     ],
   },
   {
-    title: 'Empleado / Gestion',
+    title: 'Perfil',
+    items: [
+      { label: 'Editar perfil', icon: 'person', screen: 'Profile' },
+    ],
+  },
+];
+
+const EMPLOYEE_SECTIONS = [
+  {
+    title: 'Panel',
     items: [
       { label: 'Panel empleado', icon: 'work', screen: 'EmployeeDashboard' },
+    ],
+  },
+  {
+    title: 'Consultas',
+    items: [
+      { label: 'Cuentas', icon: 'account-balance', screen: 'Accounts' },
+      { label: 'Usuarios', icon: 'people', screen: 'Users' },
+    ],
+  },
+  {
+    title: 'Gestión',
+    items: [
       { label: 'Clientes', icon: 'group', screen: 'Clients' },
       { label: 'Abrir cuenta', icon: 'account-balance', screen: 'CreateAccount' },
-      { label: 'Gestion prestamos', icon: 'request-quote', screen: 'EmployeeLoans' },
+      { label: 'Gestión préstamos', icon: 'request-quote', screen: 'EmployeeLoans' },
       { label: 'Soporte transaccional', icon: 'support-agent', screen: 'TransactionSupport' },
     ],
   },
@@ -78,11 +98,10 @@ const STACK_SCREENS = [
   { name: 'Withdraw', title: 'Retirar', component: WithdrawScreen },
   { name: 'Transfer', title: 'Transferir', component: TransferScreen },
   { name: 'Convert', title: 'Convertir', component: ConvertScreen },
-  { name: 'Loans', title: 'Prestamos', component: EmployeeLoansScreen },
   { name: 'EmployeeDashboard', title: 'Panel Empleado', component: EmployeeDashboardScreen },
   { name: 'Clients', title: 'Clientes', component: ClientsScreen },
   { name: 'CreateAccount', title: 'Abrir Cuenta', component: CreateAccountScreen },
-  { name: 'EmployeeLoans', title: 'Gestion Prestamos', component: EmployeeLoansScreen },
+  { name: 'EmployeeLoans', title: 'Gestión Préstamos', component: EmployeeLoansScreen },
   { name: 'TransactionSupport', title: 'Soporte Transaccional', component: TransactionSupportScreen },
   { name: 'Profile', title: 'Perfil', component: ProfileScreen },
 ];
@@ -116,7 +135,9 @@ const DrawerItem = ({ label, icon, onPress, isLogout = false, isActive = false }
 );
 
 const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAdmin, isEmployee } = useAuthStore();
+
+  const sections = isAdmin() ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS;
 
   const handleNavigate = (screen) => {
     onClose();
@@ -136,14 +157,14 @@ const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
             <MaterialIcons name="person" size={30} color={theme.colors.primary} />
           </View>
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>{user?.username || user?.email || 'Admin'}</Text>
-            <Text style={styles.userRole}>{user?.role || 'ADMIN_ROLE'}</Text>
+            <Text style={styles.userName}>{user?.username || user?.email || 'Usuario'}</Text>
+            <Text style={styles.userRole}>{user?.role || ''}</Text>
           </View>
         </View>
       </View>
 
       <ScrollView style={styles.drawerContent}>
-        {DRAWER_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <View key={section.title} style={styles.drawerSection}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item) => (
@@ -160,16 +181,16 @@ const CustomDrawerContent = ({ currentRoute, navigation, onClose }) => {
       </ScrollView>
 
       <View style={styles.footer}>
-        <DrawerItem label="Cerrar sesion" icon="logout" onPress={handleLogout} isLogout />
+        <DrawerItem label="Cerrar sesión" icon="logout" onPress={handleLogout} isLogout />
       </View>
     </View>
   );
 };
 
 const AdminDrawer = () => {
-  const { isAdmin } = useAuthStore();
+  const { isAdmin, isEmployee } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [currentRoute, setCurrentRoute] = useState('Dashboard');
+  const [currentRoute, setCurrentRoute] = useState('EmployeeDashboard');
   const navigationRef = useRef(null);
 
   const screenOptions = useMemo(
@@ -202,20 +223,22 @@ const AdminDrawer = () => {
     []
   );
 
-  if (!isAdmin()) {
+  if (!isAdmin() && !isEmployee()) {
     return null;
   }
+
+  const initialRoute = isEmployee() ? 'EmployeeDashboard' : 'Dashboard';
 
   return (
     <>
       <Stack.Navigator
-        initialRouteName="Dashboard"
+        initialRouteName={initialRoute}
         screenOptions={screenOptions}
         screenListeners={{
           state: (event) => {
             const routes = event.data.state?.routes || [];
             const index = event.data.state?.index || 0;
-            setCurrentRoute(routes[index]?.name || 'Dashboard');
+            setCurrentRoute(routes[index]?.name || initialRoute);
           },
         }}
       >

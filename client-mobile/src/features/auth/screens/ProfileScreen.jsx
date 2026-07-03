@@ -15,7 +15,6 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [preview, setPreview] = useState(null);
 
   const {
     control,
@@ -61,10 +60,6 @@ const ProfileScreen = ({ navigation }) => {
       formData.append('Surname', values.surname);
       formData.append('Username', values.username);
       formData.append('Phone', values.phone);
-      
-      if (values.profilePicture?.[0]) {
-        formData.append('ProfilePicture', values.profilePicture[0]);
-      }
 
       const res = await updateProfile(formData);
       if (res?.status === 200) {
@@ -91,10 +86,7 @@ const ProfileScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Auth' }],
-            });
+            // AppNavigator redirige automáticamente al AuthStack
           },
         },
       ]
@@ -105,7 +97,7 @@ const ProfileScreen = ({ navigation }) => {
     return <LoadingSpinner fullScreen text="Cargando perfil..." />;
   }
 
-  const avatarSource = preview || user?.profilePicture;
+  const avatarSource = user?.profilePicture;
 
   return (
     <ScrollView style={styles.container}>
