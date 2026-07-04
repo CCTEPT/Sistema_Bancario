@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ENDPOINTS } from '../constants/endpoints';
-import { getStoredToken } from './httpClient';
+import { getStoredToken, setStoredToken } from './httpClient';
 
 const axiosAuth = axios.create({
   baseURL: ENDPOINTS.AUTH_URL,
@@ -32,29 +32,85 @@ axiosAuth.interceptors.request.use(
   }
 );
 
+const toFormData = (data) => {
+  // If already a FormData (e.g., created in a screen), detect by presence of append()
+  if (data && typeof data.append === 'function') {
+    return data;
+  }
+
+  const formData = new FormData();
+
+  const mapping = (key) => {
+    // Map common client keys to backend PascalCase expected keys
+    const map = {
+      name: 'Name',
+      surname: 'Surname',
+      username: 'Username',
+      email: 'Email',
+      password: 'Password',
+      phone: 'Phone',
+      role: 'RoleName',
+      roleName: 'RoleName',
+    };
+    return map[key] || key;
+  };
+
+  Object.entries(data || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(mapping(key), value);
+    }
+  });
+
+  return formData;
+};
+
+// Response interceptor to clear invalid token on 401
+axiosAuth.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      await setStoredToken(null);
+    }
+    return Promise.reject(error);
+  }
+);
+
 const MANAGEABLE_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE', 'USER_ROLE'];
 
 // Auth functions
 export const login = async (data) => {
-  return await axiosAuth.post('/Auth/login', data);
+  const response = await axiosAuth.post('/Auth/login', data);
+  return response.data;
 };
 
 export const createUser = async (data) => {
-  return await axiosAuth.post('/Auth/register', data, {
+  // Accept either an object or a FormData instance created by the screen
+  const payload = toFormData(data);
+
+  const response = await axiosAuth.post('/Auth/register', payload, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+  return response.data;
 };
 
+export const register = createUser;
+
 export const verifyEmail = async (token) => {
-  return axiosAuth.post('/Auth/verify-email', { token });
+  const response = await axiosAuth.post('/Auth/verify-email', { token });
+  return response.data;
 };
 
 export const forgotPassword = async (email) => {
-  return await axiosAuth.post('/Auth/forgot-password', { email });
+  // backend expects PascalCase 'Email'
+  const payload = typeof email === 'string' ? { Email: email } : { Email: email?.email || email?.Email };
+  const response = await axiosAuth.post('/Auth/forgot-password', payload);
+  return response.data;
 };
 
 export const resetPassword = async (token, newPassword) => {
-  return await axiosAuth.post('/Auth/reset-password', { token, newPassword });
+  const response = await axiosAuth.post('/Auth/reset-password', { token, newPassword });
+  return response.data;
 };
 
 export const getAllUsers = async () => {
@@ -107,9 +163,10 @@ export const getUserProfile = async () => {
 };
 
 export const updateProfile = async (formData) => {
-  return await axiosAuth.patch('/Auth/profile', formData, {
+  const response = await axiosAuth.patch('/Auth/profile', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+  return response.data;
 };
 
 export { axiosAuth, axiosRegister };

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, FlatList, Alert } from 'react-nativ
 import { MaterialIcons } from '@expo/vector-icons';
 import { useForm } from 'react-hook-form';
 import { getAllUsers, createUser, updateUserRole, updateUserStatus } from '../../../shared/api/authClient';
+import { getApiErrorMessage } from '../../../shared/utils/apiErrorMessage';
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../shared/components/common/Card';
 import Button from '../../../shared/components/common/Button';
@@ -130,7 +131,7 @@ const UsersScreen = ({ navigation }) => {
       reset();
       await loadUsers();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Error al crear usuario');
+      Alert.alert('Error', getApiErrorMessage(err, 'Error al crear usuario'));
     } finally {
       setCreating(false);
     }
@@ -148,7 +149,7 @@ const UsersScreen = ({ navigation }) => {
       Alert.alert('Éxito', 'Rol actualizado exitosamente');
       await loadUsers();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Error al actualizar rol');
+      Alert.alert('Error', getApiErrorMessage(err, 'Error al actualizar rol'));
     } finally {
       setUpdatingUserId(null);
     }
@@ -167,7 +168,7 @@ const UsersScreen = ({ navigation }) => {
       Alert.alert('Éxito', `Usuario ${newStatus === 'ACTIVE' ? 'activado' : 'desactivado'} exitosamente`);
       await loadUsers();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Error al actualizar estado');
+      Alert.alert('Error', getApiErrorMessage(err, 'Error al actualizar estado'));
     } finally {
       setUpdatingUserId(null);
     }

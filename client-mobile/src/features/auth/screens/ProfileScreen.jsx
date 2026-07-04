@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../../../store/authStore';
 import { getUserProfile, updateProfile } from '../../../shared/api/authClient';
+import { getApiErrorMessage } from '../../../shared/utils/apiErrorMessage';
 import Input from '../../../shared/components/common/Input';
 import Button from '../../../shared/components/common/Button';
 import Card from '../../../shared/components/common/Card';
@@ -37,16 +38,16 @@ const ProfileScreen = ({ navigation }) => {
   const loadProfile = async () => {
     try {
       const res = await getUserProfile();
-      if (res?.data) {
+      if (res) {
         reset({
-          name: res.data.name ?? '',
-          surname: res.data.surname ?? '',
-          username: res.data.username ?? '',
-          phone: res.data.phone ?? '',
+          name: res.name ?? '',
+          surname: res.surname ?? '',
+          username: res.username ?? '',
+          phone: res.phone ?? '',
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo cargar el perfil.');
+      Alert.alert('Error', getApiErrorMessage(error, 'No se pudo cargar el perfil.'));
     } finally {
       setFetching(false);
     }
@@ -62,14 +63,21 @@ const ProfileScreen = ({ navigation }) => {
       formData.append('Phone', values.phone);
 
       const res = await updateProfile(formData);
-      if (res?.status === 200) {
+      if (res?.success) {
         Alert.alert('Éxito', '¡Perfil actualizado exitosamente!');
-        updateUser(values);
+        updateUser({
+          name: values.name,
+          surname: values.surname,
+          username: values.username,
+          phone: values.phone,
+        });
         setEditing(false);
         await loadProfile();
+      } else {
+        Alert.alert('Error', res?.message || 'Error al actualizar el perfil.');
       }
     } catch (err) {
-      Alert.alert('Error', err?.response?.data?.message ?? 'Error al actualizar el perfil.');
+      Alert.alert('Error', getApiErrorMessage(err, 'Error al actualizar el perfil.'));
     } finally {
       setLoading(false);
     }

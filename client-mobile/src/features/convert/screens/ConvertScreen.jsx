@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { convertCurrency, getCurrencies, getExchangeRates } from '../../../shared/api/financialClient';
+import { getApiErrorMessage } from '../../../shared/utils/apiErrorMessage';
 import { getUserAccounts } from '../../../shared/api/bankClient';
 import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../shared/components/common/Card';
@@ -151,10 +152,7 @@ const ConvertScreen = ({ navigation }) => {
         });
         showToast('Conversión local', 'Se usó la tasa disponible en la lista de tasas');
       } else {
-        Alert.alert(
-          'Error',
-          error.message || 'No hay tasa configurada para esta conversión'
-        );
+        Alert.alert('Error', getApiErrorMessage(error, 'No hay tasa configurada para esta conversión'));
       }
     } finally {
       setConverting(false);

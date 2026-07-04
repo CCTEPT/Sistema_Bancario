@@ -40,6 +40,15 @@ export const useAuthStore = create(
             };
           } catch (error) {
             console.error('No se pudo refrescar el perfil:', error);
+            await setStoredToken(null);
+            set({
+              token: null,
+              user: null,
+              role: null,
+              isAuthenticated: false,
+              isLoadingAuth: false,
+            });
+            return;
           }
         }
 
@@ -57,7 +66,7 @@ export const useAuthStore = create(
         try {
           set({ loading: true, error: null });
 
-          const { data } = await loginReq({ emailOrUsername, password });
+          const data = await loginReq({ emailOrUsername, password });
 
           const token = data?.token;
           const role = data?.userDetails?.role;
@@ -81,9 +90,10 @@ export const useAuthStore = create(
 
           try {
             const profile = await getProfile();
+            const profileData = profile?.data || profile;
             const fullUser = {
               ...data.userDetails,
-              ...(profile?.data || profile),
+              ...profileData,
             };
 
             set({
@@ -104,7 +114,7 @@ export const useAuthStore = create(
 
       logout: async () => {
         await setStoredToken(null);
-        await AsyncStorage.clear();
+        await AsyncStorage.removeItem('auth-novabank');
         set({
           user: null,
           token: null,
@@ -113,6 +123,7 @@ export const useAuthStore = create(
           role: null,
           isAuthenticated: false,
           isLoadingAuth: false,
+          error: null,
         });
       },
 
@@ -145,9 +156,19 @@ export const useAuthStore = create(
     {
       name: 'auth-novabank',
       storage: createJSONStorage(() => AsyncStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-        state?.checkAuth();
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('Error rehidratando authStore:', error);
+        }
+
+        if (!useAuthStore.getState()._hasHydrated) {
+          useAuthStore.setState({ _hasHydrated: true });
+        }
+
+        const { token, checkAuth } = useAuthStore.getState();
+        if (token && typeof checkAuth === 'function') {
+          checkAuth();
+        }
       },
     }
   )

@@ -86,7 +86,7 @@ const Input = ({
         control={control}
         name={name}
         rules={rules}
-        render={inputContent}
+        render={({ field }) => inputContent(field)}
       />
     );
   }
