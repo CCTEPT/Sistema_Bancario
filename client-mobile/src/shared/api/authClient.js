@@ -1,20 +1,21 @@
-import axios from 'axios';
-import { ENDPOINTS } from '../constants/endpoints';
-import { getStoredToken, setStoredToken } from './httpClient';
+import axios from "axios";
+import { ENDPOINTS } from "../constants/endpoints";
+import { getStoredToken, setStoredToken } from "./httpClient";
+import API_CONFIG from "../config/apiConfig";
 
 const axiosAuth = axios.create({
   baseURL: ENDPOINTS.AUTH_URL,
-  timeout: 10000,
+  timeout: API_CONFIG.REQUEST_TIMEOUT, // 30s desde config
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 const axiosRegister = axios.create({
   baseURL: ENDPOINTS.AUTH_URL,
-  timeout: 10000,
+  timeout: API_CONFIG.LONG_REQUEST_TIMEOUT, // 60s para uploads
   headers: {
-    'Content-Type': 'multipart/form-data',
+    "Content-Type": "multipart/form-data",
   },
 });
 
@@ -29,12 +30,12 @@ axiosAuth.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 const toFormData = (data) => {
   // If already a FormData (e.g., created in a screen), detect by presence of append()
-  if (data && typeof data.append === 'function') {
+  if (data && typeof data.append === "function") {
     return data;
   }
 
@@ -43,14 +44,14 @@ const toFormData = (data) => {
   const mapping = (key) => {
     // Map common client keys to backend PascalCase expected keys
     const map = {
-      name: 'Name',
-      surname: 'Surname',
-      username: 'Username',
-      email: 'Email',
-      password: 'Password',
-      phone: 'Phone',
-      role: 'RoleName',
-      roleName: 'RoleName',
+      name: "Name",
+      surname: "Surname",
+      username: "Username",
+      email: "Email",
+      password: "Password",
+      phone: "Phone",
+      role: "RoleName",
+      roleName: "RoleName",
     };
     return map[key] || key;
   };
@@ -73,14 +74,14 @@ axiosAuth.interceptors.response.use(
       await setStoredToken(null);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
-const MANAGEABLE_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE', 'USER_ROLE'];
+const MANAGEABLE_ROLES = ["ADMIN_ROLE", "EMPLOYEE_ROLE", "USER_ROLE"];
 
 // Auth functions
 export const login = async (data) => {
-  const response = await axiosAuth.post('/Auth/login', data);
+  const response = await axiosAuth.post("/Auth/login", data);
   return response.data;
 };
 
@@ -88,8 +89,8 @@ export const createUser = async (data) => {
   // Accept either an object or a FormData instance created by the screen
   const payload = toFormData(data);
 
-  const response = await axiosAuth.post('/Auth/register', payload, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  const response = await axiosAuth.post("/Auth/register", payload, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };
@@ -97,30 +98,40 @@ export const createUser = async (data) => {
 export const register = createUser;
 
 export const verifyEmail = async (token) => {
-  const response = await axiosAuth.post('/Auth/verify-email', { token });
+  const response = await axiosAuth.post("/Auth/verify-email", { token });
   return response.data;
 };
 
 export const forgotPassword = async (email) => {
   // backend expects PascalCase 'Email'
-  const payload = typeof email === 'string' ? { Email: email } : { Email: email?.email || email?.Email };
-  const response = await axiosAuth.post('/Auth/forgot-password', payload);
+  const payload =
+    typeof email === "string"
+      ? { Email: email }
+      : { Email: email?.email || email?.Email };
+  const response = await axiosAuth.post("/Auth/forgot-password", payload);
   return response.data;
 };
 
 export const resetPassword = async (token, newPassword) => {
-  const response = await axiosAuth.post('/Auth/reset-password', { token, newPassword });
+  const response = await axiosAuth.post("/Auth/reset-password", {
+    token,
+    newPassword,
+  });
   return response.data;
 };
 
 export const getAllUsers = async () => {
   const results = await Promise.allSettled(
-    MANAGEABLE_ROLES.map((roleName) => axiosAuth.get(`/User/by-role/${roleName}`))
+    MANAGEABLE_ROLES.map((roleName) =>
+      axiosAuth.get(`/User/by-role/${roleName}`),
+    ),
   );
 
-  const fulfilled = results.filter((result) => result.status === 'fulfilled');
+  const fulfilled = results.filter((result) => result.status === "fulfilled");
   if (fulfilled.length === 0) {
-    const firstError = results.find((result) => result.status === 'rejected')?.reason;
+    const firstError = results.find(
+      (result) => result.status === "rejected",
+    )?.reason;
     throw firstError;
   }
 
@@ -133,7 +144,7 @@ export const getAllUsers = async () => {
 };
 
 export const getProfile = async () => {
-  const { data } = await axiosAuth.get('/Auth/profile');
+  const { data } = await axiosAuth.get("/Auth/profile");
   return data;
 };
 
@@ -158,13 +169,13 @@ export const getUsersByRole = async (roleName) => {
 };
 
 export const getUserProfile = async () => {
-  const { data } = await axiosAuth.get('/Auth/profile');
+  const { data } = await axiosAuth.get("/Auth/profile");
   return data;
 };
 
 export const updateProfile = async (formData) => {
-  const response = await axiosAuth.patch('/Auth/profile', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  const response = await axiosAuth.patch("/Auth/profile", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 };

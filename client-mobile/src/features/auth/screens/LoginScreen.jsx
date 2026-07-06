@@ -1,34 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { useForm } from 'react-hook-form';
-import { useAuthStore } from '../../../store/authStore';
-import Input from '../../../shared/components/common/Input';
-import Button from '../../../shared/components/common/Button';
-import theme from '../../../shared/constants/theme';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
+import { useForm } from "react-hook-form";
+import { useAuthStore } from "../../../store/authStore";
+import Input from "../../../shared/components/common/Input";
+import Button from "../../../shared/components/common/Button";
+import theme from "../../../shared/constants/theme";
+import API_CONFIG from "../../../shared/config/apiConfig";
+import { ENDPOINTS } from "../../../shared/constants/endpoints";
 
 const DEMO_USERS = {
   EMPLOYEE_ROLE: {
-    id: 'demo-emp-001',
-    name: 'Laura',
-    surname: 'Martínez',
-    username: 'lmartinez',
-    email: 'laura@novabank.dev',
-    role: 'EMPLOYEE_ROLE',
+    id: "demo-emp-001",
+    name: "Laura",
+    surname: "Martínez",
+    username: "lmartinez",
+    email: "laura@novabank.dev",
+    role: "EMPLOYEE_ROLE",
   },
   ADMIN_ROLE: {
-    id: 'demo-admin-001',
-    name: 'Carlos',
-    surname: 'Herrera',
-    username: 'cherrera',
-    email: 'carlos@novabank.dev',
-    role: 'ADMIN_ROLE',
+    id: "demo-admin-001",
+    name: "Carlos",
+    surname: "Herrera",
+    username: "cherrera",
+    email: "carlos@novabank.dev",
+    role: "ADMIN_ROLE",
   },
 };
 
-const ALLOWED_ROLES = ['ADMIN_ROLE', 'EMPLOYEE_ROLE', 'USER_ROLE'];
+const ALLOWED_ROLES = ["ADMIN_ROLE", "EMPLOYEE_ROLE", "USER_ROLE"];
 
 const LoginScreen = ({ navigation }) => {
   const { login, logout, loading, error } = useAuthStore();
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const {
     control,
@@ -36,8 +47,8 @@ const LoginScreen = ({ navigation }) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      emailOrUsername: '',
-      password: '',
+      emailOrUsername: "",
+      password: "",
     },
   });
 
@@ -45,7 +56,7 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(data);
 
     if (!result.success) {
-      Alert.alert('Error', result.error || 'Error al iniciar sesión');
+      Alert.alert("Error", result.error || "Error al iniciar sesión");
       return;
     }
 
@@ -53,20 +64,16 @@ const LoginScreen = ({ navigation }) => {
 
     if (!ALLOWED_ROLES.includes(role)) {
       await logout();
-      Alert.alert(
-        'Acceso denegado',
-        'Rol no autorizado para esta aplicación.'
-      );
+      Alert.alert("Acceso denegado", "Rol no autorizado para esta aplicación.");
     }
-    // Si el rol es válido, AppNavigator redirige automáticamente al Drawer correspondiente
   };
 
   const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
+    navigation.navigate("ForgotPassword");
   };
 
   const handleRegister = () => {
-    navigation.navigate('Register');
+    navigation.navigate("Register");
   };
 
   const enterDemo = (role) => {
@@ -83,7 +90,7 @@ const LoginScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -101,7 +108,7 @@ const LoginScreen = ({ navigation }) => {
               placeholder="correo@example.com o username"
               control={control}
               name="emailOrUsername"
-              rules={{ required: 'Este campo es requerido' }}
+              rules={{ required: "Este campo es requerido" }}
               error={errors.emailOrUsername?.message}
               leftIcon="email"
               autoCapitalize="none"
@@ -112,16 +119,26 @@ const LoginScreen = ({ navigation }) => {
               placeholder="••••••••"
               control={control}
               name="password"
-              rules={{ required: 'Este campo es requerido' }}
+              rules={{ required: "Este campo es requerido" }}
               error={errors.password?.message}
               secureTextEntry
               leftIcon="lock"
             />
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                {error.includes("timeout") && (
+                  <Text style={styles.errorHint}>
+                    Si usas iPhone fisico, actualiza MACHINE_IP en
+                    src/shared/config/apiConfig.js con tu IP local
+                  </Text>
+                )}
+              </View>
+            )}
 
             <Button
-              title={loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              title={loading ? "Iniciando sesión..." : "Iniciar sesión"}
               onPress={handleSubmit(onSubmit)}
               disabled={loading}
               size="large"
@@ -133,22 +150,52 @@ const LoginScreen = ({ navigation }) => {
               </Text>
               <Text style={styles.linkSeparator}>·</Text>
               <Text onPress={handleForgotPassword} style={styles.link}>
-                ¿Olvidaste tu contraseña?
+                Olvidaste tu contraseña
+              </Text>
+              <Text style={styles.linkSeparator}>·</Text>
+              <Text
+                onPress={() => setShowDebugInfo(!showDebugInfo)}
+                style={[styles.link, styles.debugLink]}
+              >
+                Debug
               </Text>
             </View>
 
+            {showDebugInfo && (
+              <View style={styles.debugInfo}>
+                <Text style={styles.debugTitle}>Informacion de Conexion:</Text>
+                <Text style={styles.debugText}>Plataforma: {Platform.OS}</Text>
+                <Text style={styles.debugText}>
+                  API Auth: {ENDPOINTS.AUTH_URL}
+                </Text>
+                <Text style={styles.debugText}>
+                  Bank: {ENDPOINTS.BANK_SERVICE_URL}
+                </Text>
+                <Text style={styles.debugText}>
+                  Timeout: {API_CONFIG.REQUEST_TIMEOUT}ms
+                </Text>
+                {Platform.OS === "ios" && (
+                  <Text style={styles.debugWarning}>
+                    iPhone Fisico: Cambiar localhost a tu IP en apiConfig.js
+                  </Text>
+                )}
+              </View>
+            )}
+
             <View style={styles.demoSection}>
-              <Text style={styles.demoTitle}>— Acceso demo (sin backend) —</Text>
+              <Text style={styles.demoTitle}>
+                — Acceso demo (sin backend) —
+              </Text>
               <View style={styles.demoButtons}>
                 <Button
                   title="Empleado"
-                  onPress={() => enterDemo('EMPLOYEE_ROLE')}
+                  onPress={() => enterDemo("EMPLOYEE_ROLE")}
                   variant="secondary"
                   size="small"
                 />
                 <Button
                   title="Admin"
-                  onPress={() => enterDemo('ADMIN_ROLE')}
+                  onPress={() => enterDemo("ADMIN_ROLE")}
                   variant="primary"
                   size="small"
                 />
@@ -173,10 +220,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
     padding: theme.spacing.xl,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: theme.spacing.xl,
   },
   title: {
@@ -190,45 +237,89 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   form: {
-    width: '100%',
+    width: "100%",
+  },
+  errorContainer: {
+    backgroundColor: "#3d2626",
+    borderRadius: 8,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.danger,
   },
   errorText: {
     color: theme.colors.danger,
     fontSize: theme.fontSize.sm,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
+    fontWeight: "600",
   },
-  forgotPassword: {
-    textAlign: 'right',
-    fontSize: theme.fontSize.sm,
-    marginBottom: theme.spacing.md,
+  errorHint: {
+    color: theme.colors.warning,
+    fontSize: theme.fontSize.xs,
+    marginTop: theme.spacing.sm,
+    fontStyle: "italic",
+  },
+  authLinks: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: theme.spacing.lg,
+    flexWrap: "wrap",
   },
   link: {
     color: theme.colors.primary,
-  },
-  authLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: theme.spacing.md,
+    textDecorationLine: "underline",
+    fontSize: theme.fontSize.sm,
+    marginHorizontal: theme.spacing.xs,
   },
   linkSeparator: {
-    color: theme.colors.textMuted,
-    marginHorizontal: theme.spacing.sm,
+    color: theme.colors.textSecondary,
+    marginHorizontal: theme.spacing.xs,
+  },
+  debugLink: {
+    opacity: 0.6,
+  },
+  debugInfo: {
+    backgroundColor: "#1a1a1a",
+    borderRadius: 8,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  debugTitle: {
+    color: theme.colors.primary,
+    fontWeight: "bold",
+    marginBottom: theme.spacing.sm,
+  },
+  debugText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.xs,
+    marginBottom: 4,
+    fontFamily: "monospace",
+  },
+  debugWarning: {
+    color: theme.colors.warning,
+    fontSize: theme.fontSize.xs,
+    marginTop: theme.spacing.sm,
+    fontWeight: "bold",
   },
   demoSection: {
     marginTop: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: "#333",
   },
   demoTitle: {
-    color: theme.colors.textMuted,
-    fontSize: theme.fontSize.xs,
-    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
+    textAlign: "center",
     marginBottom: theme.spacing.md,
+    fontStyle: "italic",
   },
   demoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
+    flexDirection: "row",
+    gap: theme.spacing.md,
+    justifyContent: "space-around",
   },
 });
 

@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setStoredToken } from '../shared/api/httpClient';
-import { login as loginReq } from '../shared/api/authClient';
-import { getProfile } from '../shared/api/authClient';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setStoredToken } from "../shared/api/httpClient";
+import { login as loginReq } from "../shared/api/authClient";
+import { getProfile } from "../shared/api/authClient";
 
 export const useAuthStore = create(
   persist(
@@ -31,25 +31,27 @@ export const useAuthStore = create(
         const token = get().token;
         let user = get().user;
 
-        if (token) {
-          try {
-            const profile = await getProfile();
-            user = {
-              ...user,
-              ...(profile?.data || profile),
-            };
-          } catch (error) {
-            console.error('No se pudo refrescar el perfil:', error);
-            await setStoredToken(null);
-            set({
-              token: null,
-              user: null,
-              role: null,
-              isAuthenticated: false,
-              isLoadingAuth: false,
+        // Si hay token, intentar refrescar perfil de forma NO-BLOQUEANTE
+        if (token && user) {
+          // Intentar cargar perfil en background sin bloquear
+          getProfile()
+            .then((profile) => {
+              const profileData = profile?.data || profile;
+              set((state) => ({
+                user: {
+                  ...state.user,
+                  ...profileData,
+                },
+              }));
+            })
+            .catch((error) => {
+              console.warn(
+                "No se pudo refrescar el perfil en background:",
+                error?.message,
+              );
+              // No destruir la sesión solo porque falló getProfile
+              // El token sigue siendo válido
             });
-            return;
-          }
         }
 
         const role = user?.role;
@@ -72,7 +74,9 @@ export const useAuthStore = create(
           const role = data?.userDetails?.role;
 
           if (!token) {
-            throw new Error('El servicio de autenticación no devolvió un token válido');
+            throw new Error(
+              "El servicio de autenticación no devolvió un token válido",
+            );
           }
 
           await setStoredToken(token);
@@ -88,25 +92,33 @@ export const useAuthStore = create(
             role,
           });
 
-          try {
-            const profile = await getProfile();
-            const profileData = profile?.data || profile;
-            const fullUser = {
-              ...data.userDetails,
-              ...profileData,
-            };
-
-            set({
-              user: fullUser,
-              role: fullUser.role,
+          // Cargar perfil completo de forma asíncrona sin bloquear el flujo
+          getProfile()
+            .then((profile) => {
+              const profileData = profile?.data || profile;
+              const fullUser = {
+                ...data.userDetails,
+                ...profileData,
+              };
+              set({
+                user: fullUser,
+                role: fullUser.role || role,
+              });
+            })
+            .catch((error) => {
+              console.warn(
+                "No se pudo cargar el perfil completo:",
+                error?.message,
+              );
+              // No es bloqueante - el usuario ya está autenticado
             });
-          } catch (error) {
-            console.error('No se pudo cargar el perfil completo:', error);
-          }
 
           return { success: true };
         } catch (err) {
-          const message = err.response?.data?.message || err.message || 'Error al iniciar sesión';
+          const message =
+            err.response?.data?.message ||
+            err.message ||
+            "Error al iniciar sesión";
           set({ error: message, loading: false });
           return { success: false, error: message };
         }
@@ -114,7 +126,7 @@ export const useAuthStore = create(
 
       logout: async () => {
         await setStoredToken(null);
-        await AsyncStorage.removeItem('auth-novabank');
+        await AsyncStorage.removeItem("auth-novabank");
         set({
           user: null,
           token: null,
@@ -140,25 +152,25 @@ export const useAuthStore = create(
 
       isAdmin: () => {
         const { role } = get();
-        return role === 'ADMIN_ROLE';
+        return role === "ADMIN_ROLE";
       },
 
       isEmployee: () => {
         const { role } = get();
-        return role === 'EMPLOYEE_ROLE';
+        return role === "EMPLOYEE_ROLE";
       },
 
       isUser: () => {
         const { role } = get();
-        return role === 'USER_ROLE';
+        return role === "USER_ROLE";
       },
     }),
     {
-      name: 'auth-novabank',
+      name: "auth-novabank",
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
-          console.error('Error rehidratando authStore:', error);
+          console.error("Error rehidratando authStore:", error);
         }
 
         if (!useAuthStore.getState()._hasHydrated) {
@@ -166,12 +178,12 @@ export const useAuthStore = create(
         }
 
         const { token, checkAuth } = useAuthStore.getState();
-        if (token && typeof checkAuth === 'function') {
+        if (token && typeof checkAuth === "function") {
           checkAuth();
         }
       },
-    }
-  )
+    },
+  ),
 );
 
 export default useAuthStore;
