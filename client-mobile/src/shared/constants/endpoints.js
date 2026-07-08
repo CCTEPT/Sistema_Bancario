@@ -1,11 +1,14 @@
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
+import API_CONFIG from "../config/apiConfig";
 
-const localHost = Platform.OS === 'android' ? 'http://10.0.2.2' : 'http://localhost';
+// Para iOS física: Cambiar 'localhost' en src/shared/config/apiConfig.js
+const localHost =
+  Platform.OS === "android" ? "http://10.0.2.2" : "http://localhost";
 
 export const ENDPOINTS = {
-  AUTH_URL: process.env.EXPO_PUBLIC_AUTH_URL || `${localHost}:5092/api/v1`,
-  BANK_SERVICE_URL: process.env.EXPO_PUBLIC_BANK_SERVICE_URL || `${localHost}:3000/api`,
-  FINANCIAL_SERVICE_URL: process.env.EXPO_PUBLIC_FINANCIAL_SERVICE_URL || `${localHost}:4000/api`,
+  AUTH_URL: API_CONFIG.AUTH_URL,
+  BANK_SERVICE_URL: API_CONFIG.BANK_SERVICE_URL,
+  FINANCIAL_SERVICE_URL: API_CONFIG.FINANCIAL_SERVICE_URL,
 };
 
 export default ENDPOINTS;

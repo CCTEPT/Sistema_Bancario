@@ -1,16 +1,16 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
+import API_CONFIG from "../config/apiConfig";
 
-const TOKEN_KEY = 'banking_token';
+const TOKEN_KEY = "banking_token";
 
 export const getStoredToken = async () => {
   try {
     const localToken = await SecureStore.getItemAsync(TOKEN_KEY);
     if (localToken) return localToken;
     return null;
-  }
-  catch (error) {
-    console.error('Error getting stored token:', error);
+  } catch (error) {
+    console.error("Error getting stored token:", error);
     return null;
   }
 };
@@ -23,14 +23,14 @@ export const setStoredToken = async (token) => {
       await SecureStore.deleteItemAsync(TOKEN_KEY);
     }
   } catch (error) {
-    console.error('Error setting stored token:', error);
+    console.error("Error setting stored token:", error);
   }
 };
 
 export const httpClient = axios.create({
-  timeout: 10000,
+  timeout: API_CONFIG.REQUEST_TIMEOUT, // Usando config centralizada
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -45,7 +45,7 @@ httpClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor to handle errors
@@ -58,7 +58,7 @@ httpClient.interceptors.response.use(
       // You can trigger a logout here if needed
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default httpClient;
