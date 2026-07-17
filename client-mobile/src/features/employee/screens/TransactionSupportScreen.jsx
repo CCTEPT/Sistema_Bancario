@@ -14,7 +14,8 @@ const TX_CONFIG = {
   WITHDRAW: { label: 'Retiro', icon: 'arrow-upward', bg: `${theme.colors.danger}20`, color: theme.colors.danger, amountColor: theme.colors.danger, prefix: '-', badgeBg: `${theme.colors.danger}20`, badgeColor: theme.colors.danger },
   TRANSFER_OUT: { label: 'Transferencia', icon: 'swap-horiz', bg: `${theme.colors.info}20`, color: theme.colors.info, amountColor: theme.colors.info, prefix: '', badgeBg: `${theme.colors.info}20`, badgeColor: theme.colors.info },
   TRANSFER_IN: { label: 'Transferencia', icon: 'swap-horiz', bg: `${theme.colors.info}20`, color: theme.colors.info, amountColor: theme.colors.success, prefix: '', badgeBg: `${theme.colors.info}20`, badgeColor: theme.colors.info },
-  CHECK_CASH: { label: 'Cheque', icon: 'description', bg: `${theme.colors.purple}20`, color: theme.colors.purple, amountColor: theme.colors.text, prefix: '', badgeBg: `${theme.colors.purple}20`, badgeColor: theme.colors.purple },
+  CHECK_CASH: { label: 'Cheque cobrado', icon: 'description', bg: `${theme.colors.purple}20`, color: theme.colors.purple, amountColor: theme.colors.text, prefix: '', badgeBg: `${theme.colors.purple}20`, badgeColor: theme.colors.purple },
+  CHECK_ISSUE: { label: 'Cheque emitido', icon: 'description', bg: `${theme.colors.textMuted}20`, color: theme.colors.textMuted, amountColor: theme.colors.text, prefix: '', badgeBg: `${theme.colors.textMuted}20`, badgeColor: theme.colors.textMuted },
   CONVERSION: { label: 'Conversión', icon: 'sync', bg: `${theme.colors.warning}20`, color: theme.colors.warning, amountColor: theme.colors.text, prefix: '', badgeBg: `${theme.colors.warning}20`, badgeColor: theme.colors.warning },
 };
 
@@ -74,7 +75,7 @@ const TransactionSupportScreen = () => {
 
   const hasFilters = search || typeFilter !== 'ALL' || statusFilter !== 'ALL';
 
-  const types = ['ALL', 'DEPOSIT', 'WITHDRAW', 'TRANSFER_OUT', 'TRANSFER_IN', 'CHECK_CASH'];
+  const types = ['ALL', 'DEPOSIT', 'WITHDRAW', 'TRANSFER_OUT', 'TRANSFER_IN', 'CHECK_CASH', 'CHECK_ISSUE'];
   const statuses = ['ALL', 'COMPLETED', 'PENDING', 'FAILED'];
 
   const formatMoney = (amount, currency = 'GTQ') => {

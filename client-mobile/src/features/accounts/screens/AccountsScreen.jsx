@@ -70,7 +70,7 @@ const AccountsScreen = () => {
       if (canManage) {
         try {
           const requestsResponse = await getAccountRequests();
-          setAccountRequests(requestsResponse.data || requestsResponse || []);
+          setAccountRequests(requestsResponse.requests || []);
         } catch {
           setAccountRequests([]);
         }

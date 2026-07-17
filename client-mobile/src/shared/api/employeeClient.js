@@ -23,11 +23,6 @@ export async function getClients() {
   return { clients: Array.isArray(data) ? data : data.users || [] };
 }
 
-export async function getClientById(userId) {
-  const { data } = await axiosAuth.get(`/User/${userId}`);
-  return data;
-}
-
 export async function getClientAccounts(userId) {
   const { data } = await axiosBank.get('/accounts/manage');
   const all = data.accounts || (Array.isArray(data) ? data : []);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ENDPOINTS } from '../constants/endpoints';
-import { getStoredToken } from './httpClient';
+import { getStoredToken, setStoredToken, notifyUnauthorized } from './httpClient';
 
 const axiosFinancial = axios.create({
   baseURL: ENDPOINTS.FINANCIAL_SERVICE_URL,
@@ -20,6 +20,18 @@ axiosFinancial.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle expired/invalid tokens
+axiosFinancial.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error?.response?.status === 401) {
+      await setStoredToken(null);
+      notifyUnauthorized();
+    }
     return Promise.reject(error);
   }
 );

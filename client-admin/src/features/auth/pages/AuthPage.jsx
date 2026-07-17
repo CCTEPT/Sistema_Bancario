@@ -71,7 +71,7 @@ export const AuthPage = () => {
               ? 'Ingresa tu correo para recuperar tu contraseña'
               : isRegister
                 ? ' Completa los datos para poder registrarte'
-                : 'Ingresa a tu cuenta de administrador'}
+                : 'Ingresa a tu cuenta para continuar'}
           </p>
         </div>
 

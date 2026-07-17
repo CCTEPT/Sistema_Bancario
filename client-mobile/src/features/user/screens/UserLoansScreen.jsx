@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { getUserAccounts, getUserLoans, requestLoan as requestLoanApi } from '../../../shared/api/bankClient';
 import Card from '../../../shared/components/common/Card';
 import Button from '../../../shared/components/common/Button';
 import Badge from '../../../shared/components/common/Badge';
@@ -32,7 +33,9 @@ const formatDate = (value) => {
 
 const UserLoansScreen = () => {
   const [loans, setLoans] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [simulation, setSimulation] = useState({
     amount: '',
@@ -40,41 +43,42 @@ const UserLoansScreen = () => {
     interestRate: '12',
   });
   const [simulationResult, setSimulationResult] = useState(null);
+  const [accountId, setAccountId] = useState('');
 
   useEffect(() => {
-    loadLoans();
+    loadData();
   }, []);
 
-  const loadLoans = () => {
-    const mockLoans = [
-      {
-        id: '1',
-        amount: 25000,
-        currency: 'GTQ',
-        term: 24,
-        interestRate: 12,
-        monthlyPayment: 1175.50,
-        remainingBalance: 15000,
-        status: 'ACTIVE',
-        startDate: '2023-06-15',
-        endDate: '2025-06-15',
-        nextPaymentDate: '2024-02-15',
-      },
-      {
-        id: '2',
-        amount: 50000,
-        currency: 'GTQ',
-        term: 36,
-        interestRate: 14,
-        monthlyPayment: 1700.75,
-        remainingBalance: 0,
-        status: 'PAID',
-        startDate: '2021-01-10',
-        endDate: '2024-01-10',
-      },
-    ];
-    setLoans(mockLoans);
-    setLoading(false);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [loansResponse, accountsResponse] = await Promise.allSettled([
+        getUserLoans(),
+        getUserAccounts(),
+      ]);
+
+      const loadedLoans = loansResponse.status === 'fulfilled'
+        ? (loansResponse.value.loans || [])
+        : [];
+      const loadedAccounts = accountsResponse.status === 'fulfilled'
+        ? (accountsResponse.value.accounts || []).map((account) => ({
+            id: account._id,
+            accountNumber: account.numeroCuenta,
+            tipoCuenta: account.tipoCuenta,
+            divisa: account.divisa,
+          }))
+        : [];
+
+      setLoans(loadedLoans);
+      setAccounts(loadedAccounts);
+      if (loadedAccounts.length > 0) {
+        setAccountId((current) => current || loadedAccounts[0].id);
+      }
+    } catch (err) {
+      Alert.alert('Error', err.message || 'No fue posible cargar los préstamos');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateSimulation = () => {
@@ -102,12 +106,33 @@ const UserLoansScreen = () => {
     });
   };
 
-  const requestLoan = () => {
+  const handleRequestLoan = async () => {
     if (!simulationResult) return;
-    Alert.alert('Solicitud enviada', 'Tu solicitud de préstamo ha sido enviada para revisión');
-    setShowSimulator(false);
-    setSimulation({ amount: '', term: '12', interestRate: '12' });
-    setSimulationResult(null);
+
+    if (!accountId) {
+      Alert.alert('Error', 'Selecciona una cuenta para recibir el desembolso');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await requestLoanApi({
+        accountId,
+        amount: simulationResult.amount,
+        termMonths: simulationResult.term,
+        description: 'Solicitud de préstamo desde la app móvil',
+      });
+
+      Alert.alert('Solicitud enviada', 'Tu solicitud de préstamo ha sido enviada para revisión');
+      setShowSimulator(false);
+      setSimulation({ amount: '', term: '12', interestRate: '12' });
+      setSimulationResult(null);
+      await loadData();
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || err.message || 'No fue posible enviar la solicitud');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -141,7 +166,7 @@ const UserLoansScreen = () => {
             <View style={styles.termSection}>
               <Text style={styles.termLabel}>Plazo (meses)</Text>
               <View style={styles.termOptions}>
-                {['6', '12', '24', '36', '48'].map((term) => (
+                {['6', '12', '24', '36'].map((term) => (
                   <Button
                     key={term}
                     title={`${term} meses`}
@@ -157,8 +182,26 @@ const UserLoansScreen = () => {
             <View style={styles.rateSection}>
               <Text style={styles.rateLabel}>Tasa de interés anual</Text>
               <Text style={styles.rateValue}>{simulation.interestRate}%</Text>
-              <Text style={styles.rateNote}>Tasa variable según perfil crediticio</Text>
+              <Text style={styles.rateNote}>Tasa fija para todos los créditos</Text>
             </View>
+
+            {accounts.length > 0 && (
+              <View style={styles.termSection}>
+                <Text style={styles.termLabel}>Cuenta de desembolso</Text>
+                <View style={styles.termOptions}>
+                  {accounts.map((account) => (
+                    <Button
+                      key={account.id}
+                      title={`${account.divisa} - ${account.accountNumber}`}
+                      onPress={() => setAccountId(account.id)}
+                      variant={accountId === account.id ? 'primary' : 'secondary'}
+                      size="small"
+                      style={styles.termButton}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
 
             <Button
               title="Calcular cuota"
@@ -206,7 +249,8 @@ const UserLoansScreen = () => {
 
               <Button
                 title="Solicitar este crédito"
-                onPress={requestLoan}
+                onPress={handleRequestLoan}
+                loading={submitting}
                 variant="primary"
                 style={styles.requestButton}
               />
@@ -239,13 +283,13 @@ const UserLoansScreen = () => {
           </Card>
         ) : (
           loans.filter((l) => l.status === 'ACTIVE').map((loan) => (
-            <Card key={loan.id} padding="md" style={styles.loanCard}>
+            <Card key={loan.idLoan} padding="md" style={styles.loanCard}>
               <View style={styles.loanHeader}>
                 <View style={styles.loanInfo}>
                   <MaterialIcons name="account-balance-wallet" size={24} color={theme.colors.primary} />
                   <View style={styles.loanDetails}>
                     <Text style={styles.loanAmount}>{formatMoney(loan.amount, loan.currency)}</Text>
-                    <Text style={styles.loanTerm}>{loan.term} meses · {loan.interestRate}% anual</Text>
+                    <Text style={styles.loanTerm}>{loan.termMonths} meses · {loan.annualRate}% anual</Text>
                   </View>
                 </View>
                 <Badge variant="success" size="small">Activo</Badge>
@@ -256,28 +300,28 @@ const UserLoansScreen = () => {
                   <View
                     style={[
                       styles.progressFill,
-                      { width: `${((loan.amount - loan.remainingBalance) / loan.amount) * 100}%` },
+                      { width: `${Math.min(100, ((loan.amountPaid || 0) / loan.totalPayment) * 100)}%` },
                     ]}
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  Pagado: {formatMoney(loan.amount - loan.remainingBalance)} de {formatMoney(loan.amount)}
+                  Pagado: {formatMoney(loan.amountPaid || 0, loan.currency)} de {formatMoney(loan.totalPayment, loan.currency)}
                 </Text>
               </View>
 
               <View style={styles.loanMeta}>
                 <View style={styles.metaRow}>
                   <Text style={styles.metaLabel}>Cuota mensual:</Text>
-                  <Text style={styles.metaValue}>{formatMoney(loan.monthlyPayment)}</Text>
+                  <Text style={styles.metaValue}>{formatMoney(loan.monthlyPayment, loan.currency)}</Text>
                 </View>
                 <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Próximo pago:</Text>
-                  <Text style={styles.metaValue}>{formatDate(loan.nextPaymentDate)}</Text>
+                  <Text style={styles.metaLabel}>Fecha de aprobación:</Text>
+                  <Text style={styles.metaValue}>{formatDate(loan.approvedAt || loan.createdAt)}</Text>
                 </View>
                 <View style={styles.metaRow}>
                   <Text style={styles.metaLabel}>Saldo restante:</Text>
                   <Text style={[styles.metaValue, styles.metaHighlight]}>
-                    {formatMoney(loan.remainingBalance)}
+                    {formatMoney(loan.remainingBalance, loan.currency)}
                   </Text>
                 </View>
               </View>
@@ -296,13 +340,13 @@ const UserLoansScreen = () => {
           loans.filter((l) => l.status !== 'ACTIVE').map((loan) => {
             const statusConfig = LOAN_STATUS[loan.status] || LOAN_STATUS.PENDING;
             return (
-              <Card key={loan.id} padding="md" style={styles.loanCard}>
+              <Card key={loan.idLoan} padding="md" style={styles.loanCard}>
                 <View style={styles.loanHeader}>
                   <View style={styles.loanInfo}>
                     <MaterialIcons name="history" size={24} color={theme.colors.textSecondary} />
                     <View style={styles.loanDetails}>
                       <Text style={styles.loanAmount}>{formatMoney(loan.amount, loan.currency)}</Text>
-                      <Text style={styles.loanTerm}>{loan.term} meses · {loan.interestRate}% anual</Text>
+                      <Text style={styles.loanTerm}>{loan.termMonths} meses · {loan.annualRate}% anual</Text>
                     </View>
                   </View>
                   <Badge variant={statusConfig.variant} size="small">
@@ -312,13 +356,15 @@ const UserLoansScreen = () => {
 
                 <View style={styles.loanMeta}>
                   <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Fecha inicio:</Text>
-                    <Text style={styles.metaValue}>{formatDate(loan.startDate)}</Text>
+                    <Text style={styles.metaLabel}>Fecha de solicitud:</Text>
+                    <Text style={styles.metaValue}>{formatDate(loan.createdAt)}</Text>
                   </View>
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Fecha fin:</Text>
-                    <Text style={styles.metaValue}>{formatDate(loan.endDate)}</Text>
-                  </View>
+                  {loan.status === 'REJECTED' && loan.rejectionReason && (
+                    <View style={styles.metaRow}>
+                      <Text style={styles.metaLabel}>Motivo:</Text>
+                      <Text style={styles.metaValue}>{loan.rejectionReason}</Text>
+                    </View>
+                  )}
                 </View>
               </Card>
             );

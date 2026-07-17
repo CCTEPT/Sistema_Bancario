@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
@@ -15,25 +16,6 @@ import Button from "../../../shared/components/common/Button";
 import theme from "../../../shared/constants/theme";
 import API_CONFIG from "../../../shared/config/apiConfig";
 import { ENDPOINTS } from "../../../shared/constants/endpoints";
-
-const DEMO_USERS = {
-  EMPLOYEE_ROLE: {
-    id: "demo-emp-001",
-    name: "Laura",
-    surname: "Martínez",
-    username: "lmartinez",
-    email: "laura@novabank.dev",
-    role: "EMPLOYEE_ROLE",
-  },
-  ADMIN_ROLE: {
-    id: "demo-admin-001",
-    name: "Carlos",
-    surname: "Herrera",
-    username: "cherrera",
-    email: "carlos@novabank.dev",
-    role: "ADMIN_ROLE",
-  },
-};
 
 const ALLOWED_ROLES = ["ADMIN_ROLE", "EMPLOYEE_ROLE", "USER_ROLE"];
 
@@ -98,7 +80,12 @@ const LoginScreen = ({ navigation }) => {
       >
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>Sistema Bancario</Text>
+            <Image
+              source={require("../../../../assets/novabank-logo.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>NovaBank</Text>
             <Text style={styles.subtitle}>Iniciar sesión</Text>
           </View>
 
@@ -182,25 +169,6 @@ const LoginScreen = ({ navigation }) => {
               </View>
             )}
 
-            <View style={styles.demoSection}>
-              <Text style={styles.demoTitle}>
-                — Acceso demo (sin backend) —
-              </Text>
-              <View style={styles.demoButtons}>
-                <Button
-                  title="Empleado"
-                  onPress={() => enterDemo("EMPLOYEE_ROLE")}
-                  variant="secondary"
-                  size="small"
-                />
-                <Button
-                  title="Admin"
-                  onPress={() => enterDemo("ADMIN_ROLE")}
-                  variant="primary"
-                  size="small"
-                />
-              </View>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -231,6 +199,11 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.primary,
     marginBottom: theme.spacing.sm,
+  },
+  logo: {
+    width: 140,
+    height: 140,
+    marginBottom: theme.spacing.md,
   },
   subtitle: {
     fontSize: theme.fontSize.lg,

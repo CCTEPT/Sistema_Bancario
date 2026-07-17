@@ -54,6 +54,15 @@ const TYPE_CONFIG = {
     amountColor: theme.colors.success,
     prefix: '+',
   },
+  CHECK_ISSUE: {
+    label: 'Cheque emitido',
+    filter: 'check',
+    icon: 'description',
+    iconBg: `${theme.colors.textMuted}20`,
+    iconColor: theme.colors.textMuted,
+    amountColor: theme.colors.textMuted,
+    prefix: '',
+  },
 };
 
 const TransactionsScreen = () => {

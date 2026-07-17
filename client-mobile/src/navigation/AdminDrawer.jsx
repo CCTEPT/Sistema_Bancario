@@ -23,8 +23,6 @@ import CreateAccountScreen from '../features/employee/screens/CreateAccountScree
 import EmployeeLoansScreen from '../features/employee/screens/EmployeeLoansScreen';
 import TransactionSupportScreen from '../features/employee/screens/TransactionSupportScreen';
 import DepositScreen from '../features/deposit/screens/DepositScreen';
-import WithdrawScreen from '../features/withdraw/screens/WithdrawScreen';
-import TransferScreen from '../features/transfer/screens/TransferScreen';
 import ConvertScreen from '../features/convert/screens/ConvertScreen';
 
 const Stack = createNativeStackNavigator();
@@ -44,8 +42,6 @@ const ADMIN_SECTIONS = [
     title: 'Operaciones',
     items: [
       { label: 'Depositar', icon: 'add-circle-outline', screen: 'Deposit' },
-      { label: 'Retirar', icon: 'remove-circle-outline', screen: 'Withdraw' },
-      { label: 'Transferir', icon: 'swap-horiz', screen: 'Transfer' },
       { label: 'Convertir', icon: 'currency-exchange', screen: 'Convert' },
     ],
   },
@@ -95,8 +91,6 @@ const STACK_SCREENS = [
   { name: 'Checks', title: 'Cheques', component: ChecksScreen },
   { name: 'Transactions', title: 'Movimientos', component: TransactionsScreen },
   { name: 'Deposit', title: 'Depositar', component: DepositScreen },
-  { name: 'Withdraw', title: 'Retirar', component: WithdrawScreen },
-  { name: 'Transfer', title: 'Transferir', component: TransferScreen },
   { name: 'Convert', title: 'Convertir', component: ConvertScreen },
   { name: 'EmployeeDashboard', title: 'Panel Empleado', component: EmployeeDashboardScreen },
   { name: 'Clients', title: 'Clientes', component: ClientsScreen },
