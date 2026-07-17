@@ -3,33 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore.js'
 import toast from 'react-hot-toast'
 
-const DEMO_USERS = {
-  EMPLOYEE_ROLE: {
-    id: 'demo-emp-001',
-    name: 'Laura',
-    surname: 'Martínez',
-    username: 'lmartinez',
-    email: 'laura@novabank.dev',
-    role: 'EMPLOYEE_ROLE',
-  },
-  ADMIN_ROLE: {
-    id: 'demo-admin-001',
-    name: 'Carlos',
-    surname: 'Herrera',
-    username: 'cherrera',
-    email: 'carlos@novabank.dev',
-    role: 'ADMIN_ROLE',
-  },
-  USER_ROLE: {
-    id: 'demo-user-001',
-    name: 'Ana',
-    surname: 'López',
-    username: 'alopez',
-    email: 'ana@novabank.dev',
-    role: 'USER_ROLE',
-  },
-};
-
 export const LoginForm = ({ onForgot, onRegister }) => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -66,7 +39,7 @@ export const LoginForm = ({ onForgot, onRegister }) => {
     });
     const dest = role === 'EMPLOYEE_ROLE' ? '/dashboard/employee'
       : role === 'ADMIN_ROLE' ? '/dashboard'
-      : '/dashboard';
+        : '/dashboard';
     toast.success(`Demo: entrando como ${user.name} (${role.replace('_ROLE', '')})`, { duration: 2000 });
     navigate(dest);
   };
@@ -131,34 +104,6 @@ export const LoginForm = ({ onForgot, onRegister }) => {
       >
         {loading ? "Iniciando sesión..." : "Authenticate"}
       </button>
-
-      {/* Demo access */}
-      <div className="pt-1">
-        <p className="text-center text-xs text-gray-500 mb-2">— Acceso demo (sin backend) —</p>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => enterDemo('EMPLOYEE_ROLE')}
-            className="rounded-lg border border-[#83fb7f]/30 bg-[#83fb7f]/5 px-2 py-2 text-xs font-medium text-[#83fb7f] hover:bg-[#83fb7f]/15 transition-all"
-          >
-            Empleado
-          </button>
-          <button
-            type="button"
-            onClick={() => enterDemo('ADMIN_ROLE')}
-            className="rounded-lg border border-blue-400/30 bg-blue-400/5 px-2 py-2 text-xs font-medium text-blue-400 hover:bg-blue-400/15 transition-all"
-          >
-            Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => enterDemo('USER_ROLE')}
-            className="rounded-lg border border-purple-400/30 bg-purple-400/5 px-2 py-2 text-xs font-medium text-purple-400 hover:bg-purple-400/15 transition-all"
-          >
-            Cliente
-          </button>
-        </div>
-      </div>
 
       <p className="text-center text-sm text-gray-400">
         <button

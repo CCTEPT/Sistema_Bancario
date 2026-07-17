@@ -27,6 +27,16 @@ export const setStoredToken = async (token) => {
   }
 };
 
+let unauthorizedHandler = null;
+
+export const setUnauthorizedHandler = (handler) => {
+  unauthorizedHandler = handler;
+};
+
+export const notifyUnauthorized = () => {
+  unauthorizedHandler?.();
+};
+
 export const httpClient = axios.create({
   timeout: API_CONFIG.REQUEST_TIMEOUT, // Usando config centralizada
   headers: {
@@ -55,7 +65,7 @@ httpClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid, clear it
       await setStoredToken(null);
-      // You can trigger a logout here if needed
+      notifyUnauthorized();
     }
     return Promise.reject(error);
   },

@@ -4,7 +4,7 @@
     "slug": "sistema-bancario-admin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/novabank-logo.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
@@ -20,13 +20,13 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/novabank-logo.png",
         "backgroundColor": "#141823"
       },
       "package": "com.sistemabancario.admin"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/novabank-logo.png"
     },
     "plugins": [
       "expo-secure-store"

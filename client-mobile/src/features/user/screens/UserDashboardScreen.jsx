@@ -41,7 +41,7 @@ const UserDashboardScreen = ({ navigation }) => {
         : [];
       
       const movementsData = movementsResponse.status === 'fulfilled'
-        ? (movementsResponse.value.movements || [])
+        ? (movementsResponse.value.data || [])
         : [];
 
       setAccounts(accountsData);
@@ -74,14 +74,15 @@ const UserDashboardScreen = ({ navigation }) => {
 
   const renderMovementItem = (movement) => {
     const config = {
-      DEPOSIT: { label: 'Depósito', icon: 'arrow-downward', color: theme.colors.success },
-      WITHDRAW: { label: 'Retiro', icon: 'arrow-upward', color: theme.colors.danger },
-      TRANSFER_OUT: { label: 'Transferencia enviada', icon: 'swap-horiz', color: theme.colors.danger },
-      TRANSFER_IN: { label: 'Transferencia recibida', icon: 'swap-horiz', color: theme.colors.success },
-      CHECK_CASH: { label: 'Cheque', icon: 'description', color: theme.colors.purple },
+      DEPOSIT: { label: 'Depósito', icon: 'arrow-downward', color: theme.colors.success, prefix: '+' },
+      WITHDRAW: { label: 'Retiro', icon: 'arrow-upward', color: theme.colors.danger, prefix: '-' },
+      TRANSFER_OUT: { label: 'Transferencia enviada', icon: 'swap-horiz', color: theme.colors.danger, prefix: '-' },
+      TRANSFER_IN: { label: 'Transferencia recibida', icon: 'swap-horiz', color: theme.colors.success, prefix: '+' },
+      CHECK_CASH: { label: 'Cheque cobrado', icon: 'description', color: theme.colors.purple, prefix: '+' },
+      CHECK_ISSUE: { label: 'Cheque emitido', icon: 'description', color: theme.colors.textMuted, prefix: '' },
     };
 
-    const cfg = config[movement.movementType] || { label: movement.movementType, icon: 'receipt', color: theme.colors.textMuted };
+    const cfg = config[movement.movementType] || { label: movement.movementType, icon: 'receipt', color: theme.colors.textMuted, prefix: '' };
 
     return (
       <View style={styles.movementItem}>
@@ -93,7 +94,7 @@ const UserDashboardScreen = ({ navigation }) => {
           <Text style={styles.movementDate}>{formatDate(movement.date || movement.createdAt)}</Text>
         </View>
         <Text style={[styles.movementAmount, { color: cfg.color }]}>
-          {cfg.color === theme.colors.success ? '+' : '-'}{formatMoney(movement.amount, movement.currency || 'GTQ')}
+          {cfg.prefix}{formatMoney(movement.amount, movement.currency || 'GTQ')}
         </Text>
       </View>
     );

@@ -8,7 +8,7 @@ import { Platform } from "react-native";
  */
 
 // IMPORTANTE: Cambia esto a la IP de tu máquina si usas dispositivo físico
-const MACHINE_IP = "192.168.1.14"; // Tu IP actual
+const MACHINE_IP = process.env.EXPO_PUBLIC_MACHINE_IP || "192.168.1.23";
 
 const isDevelopment = __DEV__; // Si es ambiente de desarrollo con Metro
 

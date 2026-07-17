@@ -17,9 +17,9 @@ import UserAccountsScreen from '../features/user/screens/UserAccountsScreen';
 import UserTransactionsScreen from '../features/user/screens/UserTransactionsScreen';
 import UserTransferScreen from '../features/user/screens/UserTransferScreen';
 import UserDepositScreen from '../features/user/screens/UserDepositScreen';
-import UserWithdrawScreen from '../features/user/screens/UserWithdrawScreen';
-import UserConvertScreen from '../features/user/screens/UserConvertScreen';
-import UserChecksScreen from '../features/user/screens/UserChecksScreen';
+import WithdrawScreen from '../features/withdraw/screens/WithdrawScreen';
+import ConvertScreen from '../features/convert/screens/ConvertScreen';
+import ChecksScreen from '../features/checks/screens/ChecksScreen';
 import UserLoansScreen from '../features/user/screens/UserLoansScreen';
 import UserDashboardScreen from '../features/user/screens/UserDashboardScreen';
 
@@ -64,9 +64,9 @@ const STACK_SCREENS = [
   { name: 'UserTransactions', title: 'Transacciones', component: UserTransactionsScreen },
   { name: 'UserTransfer', title: 'Transferir', component: UserTransferScreen },
   { name: 'UserDeposit', title: 'Depositar', component: UserDepositScreen },
-  { name: 'UserWithdraw', title: 'Retirar', component: UserWithdrawScreen },
-  { name: 'UserConvert', title: 'Convertir', component: UserConvertScreen },
-  { name: 'UserChecks', title: 'Cheques', component: UserChecksScreen },
+  { name: 'UserWithdraw', title: 'Retirar', component: WithdrawScreen },
+  { name: 'UserConvert', title: 'Convertir', component: ConvertScreen },
+  { name: 'UserChecks', title: 'Cheques', component: ChecksScreen },
   { name: 'UserLoans', title: 'Préstamos', component: UserLoansScreen },
   { name: 'Profile', title: 'Perfil', component: ProfileScreen },
 ];

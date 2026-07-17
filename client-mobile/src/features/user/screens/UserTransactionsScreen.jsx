@@ -50,7 +50,18 @@ const TYPE_CONFIG = {
     amountColor: theme.colors.success,
     prefix: '+',
   },
+  CHECK_ISSUE: {
+    label: 'Cheque emitido',
+    icon: 'description',
+    iconBg: `${theme.colors.textMuted}20`,
+    iconColor: theme.colors.textMuted,
+    amountColor: theme.colors.textMuted,
+    prefix: '',
+  },
 };
+
+const INCOME_TYPES = ['DEPOSIT', 'TRANSFER_IN', 'CHECK_CASH'];
+const EXPENSE_TYPES = ['WITHDRAW', 'TRANSFER_OUT'];
 
 const formatMoney = (amount, currency = 'GTQ') => {
   try {
@@ -93,7 +104,7 @@ const UserTransactionsScreen = () => {
       }
 
       const response = await getUserMovements({ limit: 20, page: pageNum });
-      const newMovements = response.movements || [];
+      const newMovements = response.data || [];
 
       if (append) {
         setMovements((prev) => [...prev, ...newMovements]);
@@ -123,8 +134,10 @@ const UserTransactionsScreen = () => {
       });
     }
 
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter((m) => m.movementType === typeFilter);
+    if (typeFilter === 'income') {
+      filtered = filtered.filter((m) => INCOME_TYPES.includes(m.movementType));
+    } else if (typeFilter === 'expense') {
+      filtered = filtered.filter((m) => EXPENSE_TYPES.includes(m.movementType));
     }
 
     setFilteredMovements(filtered);

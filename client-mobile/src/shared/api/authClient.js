@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ENDPOINTS } from "../constants/endpoints";
-import { getStoredToken, setStoredToken } from "./httpClient";
+import { getStoredToken, setStoredToken, notifyUnauthorized } from "./httpClient";
 import API_CONFIG from "../config/apiConfig";
 
 const axiosAuth = axios.create({
@@ -72,6 +72,7 @@ axiosAuth.interceptors.response.use(
     const status = error?.response?.status;
     if (status === 401) {
       await setStoredToken(null);
+      notifyUnauthorized();
     }
     return Promise.reject(error);
   },

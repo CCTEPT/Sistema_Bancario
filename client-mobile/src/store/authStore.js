@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setStoredToken } from "../shared/api/httpClient";
+import { setStoredToken, setUnauthorizedHandler } from "../shared/api/httpClient";
 import { login as loginReq } from "../shared/api/authClient";
 import { getProfile } from "../shared/api/authClient";
 
@@ -185,5 +185,9 @@ export const useAuthStore = create(
     },
   ),
 );
+
+setUnauthorizedHandler(() => {
+  useAuthStore.getState().logout();
+});
 
 export default useAuthStore;

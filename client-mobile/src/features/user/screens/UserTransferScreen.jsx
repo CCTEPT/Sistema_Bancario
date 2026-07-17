@@ -84,8 +84,8 @@ const UserTransferScreen = ({ navigation }) => {
     setSubmitting(true);
     try {
       await transferBetweenAccounts({
-        fromAccountId,
-        toAccountId: destinationAccountId,
+        sourceAccount: fromAccountId,
+        destinationAccount: destinationAccountId,
         amount: transferAmount,
         description: description || 'Transferencia móvil',
       });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, Alert, RefreshControl, TouchableOpacity } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getUserAccounts } from '../../../shared/api/bankClient';
 import Card from '../../../shared/components/common/Card';

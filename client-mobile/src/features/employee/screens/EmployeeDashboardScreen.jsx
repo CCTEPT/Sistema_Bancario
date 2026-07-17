@@ -16,7 +16,8 @@ const TX_TYPE = {
   WITHDRAW: { label: 'Retiro', color: theme.colors.danger, bg: `${theme.colors.danger}20` },
   TRANSFER_OUT: { label: 'Transferencia', color: theme.colors.info, bg: `${theme.colors.info}20` },
   TRANSFER_IN: { label: 'Transferencia', color: theme.colors.info, bg: `${theme.colors.info}20` },
-  CHECK_CASH: { label: 'Cheque', color: theme.colors.purple, bg: `${theme.colors.purple}20` },
+  CHECK_CASH: { label: 'Cheque cobrado', color: theme.colors.purple, bg: `${theme.colors.purple}20` },
+  CHECK_ISSUE: { label: 'Cheque emitido', color: theme.colors.textMuted, bg: `${theme.colors.textMuted}20` },
 };
 
 const buildChartData = (transactions) => {

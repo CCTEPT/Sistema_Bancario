@@ -12,6 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 // CORRECCIÓN: Omitir validación SSL (Cloudinary, etc.)
 System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
 
+// Asegurar que el servicio sea alcanzable desde la red local de la app móvil
+var configuredUrls = builder.Configuration["ASPNETCORE_URLS"];
+if (string.IsNullOrWhiteSpace(configuredUrls))
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:5092");
+}
+
 // Configure Serilog from appsettings.json only (avoid duplicate sinks)
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
     loggerConfiguration

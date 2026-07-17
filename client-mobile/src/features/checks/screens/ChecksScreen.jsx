@@ -141,8 +141,11 @@ const ChecksScreen = () => {
     }
   };
 
+  const accountsById = new Map(accounts.map((account) => [account.id, account]));
+
   const renderCheckCard = (item) => {
     const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.PENDING;
+    const issuingAccount = accountsById.get(item.issuingAccount);
 
     return (
       <Card padding="md" style={styles.checkCard}>
@@ -151,7 +154,7 @@ const ChecksScreen = () => {
             <MaterialIcons name="description" size={24} color={theme.colors.primary} />
             <View style={styles.checkDetails}>
               <Text style={styles.checkNumber}>{item.checkNumber || 'N/A'}</Text>
-              <Text style={styles.checkMeta}>Cuenta: {item.issuingAccountId?.numeroCuenta || 'N/A'}</Text>
+              <Text style={styles.checkMeta}>Cuenta: {issuingAccount?.accountNumber || 'N/A'}</Text>
             </View>
           </View>
           <Badge
@@ -165,7 +168,7 @@ const ChecksScreen = () => {
         <View style={styles.checkBody}>
           <View style={styles.checkAmount}>
             <Text style={styles.amountLabel}>Monto</Text>
-            <Text style={styles.amountValue}>{formatMoney(item.amount, item.currency)}</Text>
+            <Text style={styles.amountValue}>{formatMoney(item.amount, issuingAccount?.currency || 'GTQ')}</Text>
           </View>
           <Text style={styles.checkDate}>Fecha: {formatDate(item.date || item.createdAt)}</Text>
         </View>
