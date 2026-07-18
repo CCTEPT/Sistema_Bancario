@@ -6,7 +6,7 @@ namespace AuthService.Api.Extensions;
 // Basicamente tenemos configuraciones de origenes permitidos etc 
 public static class SecurityExtensions
 {
-    private static readonly string[] DefaultAllowedOrigins = ["http://localhost:3000", "https://localhost:3001", "http://localhost:5173"];
+    private static readonly string[] DefaultAllowedOrigins = ["http://localhost:3000", "https://localhost:3001", "http://localhost:5173", "https://novabank-nine-rosy.vercel.app"];
     private static readonly string[] DefaultAdminOrigins = ["https://admin.localhost:5173"];
     private static readonly string[] AllowedHttpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
     private static readonly string[] AdminHttpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
