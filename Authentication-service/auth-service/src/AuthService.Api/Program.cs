@@ -2,6 +2,7 @@ using AuthService.Api.Extensions;
 using AuthService.Api.Middlewares;
 using AuthService.Api.ModelBinders;
 using AuthService.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 using NetEscapades.AspNetCore.SecurityHeaders.Infrastructure;
 using Serilog;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -135,8 +136,8 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogInformation("Verificando conexión a la base de datos...");
 
-        // Garantizar que la base de datos se crea (similar a Sequelize sync en Node.js)
-        await context.Database.EnsureCreatedAsync();
+        // Aplicar migraciones de Entity Framework antes de sembrar datos.
+        await context.Database.MigrateAsync();
 
         logger.LogInformation("Base de datos lista. Ejecutando datos semilla...");
         await DataSeeder.SeedAsync(context);

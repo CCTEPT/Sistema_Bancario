@@ -1,0 +1,25 @@
+# Git and editor metadata
+.git
+.gitignore
+.vscode
+.idea
+
+# Dependency directories
+**/node_modules
+**/.pnpm-store
+**/dist
+**/build
+**/coverage
+
+# OS / temp files
+.DS_Store
+Thumbs.db
+*.log
+
+# Local env files
+.env
+**/.env
+
+# Build artifacts
+**/bin
+**/obj

@@ -1,0 +1,120 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: novabank-postgres
+    environment:
+      POSTGRES_DB: novabank
+      POSTGRES_USER: ${POSTGRES_USER:-CCCTP}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-CCCTP} -d novabank"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7.0
+    container_name: novabank-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: NovaBank-stack/auth-service/Dockerfile
+    container_name: novabank-auth
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:5092
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=novabank;Username=${POSTGRES_USER:-CCCTP};Password=${POSTGRES_PASSWORD:-admin};Port=5432
+      JwtSettings__SecretKey: ${JWT_SECRET:-ClaveSuperSecretaDePrueba1234567890}
+      JwtSettings__Issuer: ${JWT_ISSUER:-NovaBank}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-NovaBank}
+      AppSettings__FrontendUrl: ${FRONTEND_URL:-http://localhost:5173}
+      Security__AllowedOrigins: ${AUTH_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:80}
+      SmtpSettings__Host: ${SMTP_HOST:-smtp.gmail.com}
+      SmtpSettings__Port: ${SMTP_PORT:-465}
+      SmtpSettings__Username: ${SMTP_USERNAME:-cctept31@gmail.com}
+      SmtpSettings__Password: ${SMTP_PASSWORD:-innz kqdl bxal idzg}
+      CloudinarySettings__CloudName: ${CLOUDINARY_CLOUD_NAME:-dgbvb0sfu}
+      CloudinarySettings__ApiKey: ${CLOUDINARY_API_KEY:-342864999763714}
+      CloudinarySettings__ApiSecret: ${CLOUDINARY_API_SECRET:-O3jYWb2up9K28Yvis5FioJnp6yk}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5092:5092"
+
+  bank-service:
+    build:
+      context: ..
+      dockerfile: NovaBank-stack/bank-service/Dockerfile
+    container_name: novabank-bank
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      MONGO_URI: mongodb://admin:${MONGO_ROOT_PASSWORD:-admin}@mongo:27017/NovaBank?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-ClaveSuperSecretaDePrueba1234567890}
+      JWT_ISSUER: ${JWT_ISSUER:-NovaBank}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-NovaBank}
+      AUTH_SERVICE_URL: http://auth-service:5092
+      FINANCIAL_CONFIG_URL: http://financial-service:4000/api
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+  financial-service:
+    build:
+      context: ..
+      dockerfile: NovaBank-stack/financial-service/Dockerfile
+    container_name: novabank-financial
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      MONGO_URI: mongodb://admin:${MONGO_ROOT_PASSWORD:-admin}@mongo:27017/FinancialConfig?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-ClaveSuperSecretaDePrueba1234567890}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  client-admin:
+    build:
+      context: ..
+      dockerfile: NovaBank-stack/client-admin/Dockerfile
+      args:
+        VITE_AUTH: ${VITE_AUTH:-http://localhost:5092/api/v1}
+        VITE_BANK_SERVICE: ${VITE_BANK_SERVICE:-http://localhost:3000/api}
+        VITE_FINANCIAL_SERVICE: ${VITE_FINANCIAL_SERVICE:-http://localhost:4000/api}
+    container_name: novabank-client
+    depends_on:
+      - auth-service
+      - bank-service
+      - financial-service
+    ports:
+      - "5173:80"
+
+volumes:
+  postgres_data:
+  mongo_data:
