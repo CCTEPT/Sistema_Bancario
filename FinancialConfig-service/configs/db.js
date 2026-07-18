@@ -4,7 +4,13 @@ import AccountType from "../src/models/accountType.model.js";
 
 export const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    const mongoUri = process.env.URI_MONGODB || process.env.MONGO_URI;
+
+    if (!mongoUri) {
+      throw new Error("No se encontró la variable de entorno URI_MONGODB o MONGO_URI");
+    }
+
+    await mongoose.connect(mongoUri);
     console.log("MongoDB conectado");
 
     // Seed default currencies
