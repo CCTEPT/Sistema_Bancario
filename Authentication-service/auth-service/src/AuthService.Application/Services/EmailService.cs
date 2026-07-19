@@ -70,11 +70,31 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
 
     private string GetFrontendBaseUrl()
     {
+        const string defaultFrontendUrl = "https://novabank-nine-rosy.vercel.app";
         var configuredUrl = configuration["AppSettings:FrontendUrl"]
             ?? configuration["FrontendUrl"]
-            ?? "https://novabank-nine-rosy.vercel.app";
+            ?? configuration["FRONTEND_URL"]
+            ?? string.Empty;
 
-        var normalizedUrl = configuredUrl.Trim().TrimEnd('/');
+        var normalizedUrl = configuredUrl?.Trim().TrimEnd('/') ?? string.Empty;
+        var environmentName = configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? configuration["DOTNET_ENVIRONMENT"]
+            ?? "Production";
+
+        var isLocalHostValue = normalizedUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase) ||
+            normalizedUrl.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase);
+
+        if (isLocalHostValue &&
+            (environmentName.Contains("Production", StringComparison.OrdinalIgnoreCase) ||
+             environmentName.Contains("Staging", StringComparison.OrdinalIgnoreCase)))
+        {
+            return defaultFrontendUrl;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedUrl))
+        {
+            return defaultFrontendUrl;
+        }
 
         if (normalizedUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             normalizedUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
@@ -82,7 +102,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
             return normalizedUrl;
         }
 
-        if (normalizedUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+        if (isLocalHostValue)
         {
             return $"http://{normalizedUrl}";
         }
