@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MailKit.Net.Smtp;
@@ -68,6 +69,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     private async Task SendEmailAsync(string to, string subject, string body)
     {
         var smtpSettings = configuration.GetSection("SmtpSettings");
+        var useFallback = bool.Parse(smtpSettings["UseFallback"] ?? "false");
 
         try
         {
@@ -121,7 +123,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
                 {
                     await client.ConnectAsync(host, port, SecureSocketOptions.SslOnConnect);
                 }
-                else if (port == 587)
+                else if (port == 587 || port == 2525)
                 {
                     await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
                 }
@@ -147,6 +149,28 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
                 await client.DisconnectAsync(true);
                 logger.LogInformation("Pipeline de email completado");
             }
+            catch (SocketException ex)
+            {
+                logger.LogWarning(ex, "Error de red al conectar con el servidor SMTP");
+                if (useFallback)
+                {
+                    logger.LogWarning("Usando fallback de email. Se omite el envío y se continúa el flujo.");
+                    return;
+                }
+
+                throw new InvalidOperationException($"No se pudo conectar al servidor SMTP: {ex.Message}", ex);
+            }
+            catch (TimeoutException ex)
+            {
+                logger.LogWarning(ex, "Timeout al conectar con el servidor SMTP");
+                if (useFallback)
+                {
+                    logger.LogWarning("Usando fallback de email. Se omite el envío y se continúa el flujo.");
+                    return;
+                }
+
+                throw new InvalidOperationException($"Timeout al conectar al servidor SMTP: {ex.Message}", ex);
+            }
             catch (MailKit.Security.AuthenticationException authEx)
             {
                 logger.LogError(authEx, "La autenticación de Gmail falló. Verifica la contraseña de aplicación.");
@@ -164,7 +188,6 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
             logger.LogError(ex, "Error al enviar el email");
 
             // Verificar si usar fallback
-            var useFallback = bool.Parse(smtpSettings["UseFallback"] ?? "false");
             if (useFallback)
             {
                 logger.LogWarning("Usando respaldo de email");
