@@ -13,7 +13,8 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     public async Task SendEmailVerificationAsync(string email, string username, string token)
     {
         var subject = "Verifica tu dirección de correo electrónico";
-        var verificationUrl = $"{configuration["AppSettings:FrontendUrl"]}/verify-email?token={token}";
+        var frontendBaseUrl = GetFrontendBaseUrl();
+        var verificationUrl = $"{frontendBaseUrl}/verify-email?token={Uri.EscapeDataString(token)}";
 
         var body = $@"
             <h2>¡Bienvenido {username}!</h2>
@@ -33,7 +34,8 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     public async Task SendPasswordResetAsync(string email, string username, string token)
     {
         var subject = "Restablece tu contraseña";
-        var resetUrl = $"{configuration["AppSettings:FrontendUrl"]}/reset-password?token={token}";
+        var frontendBaseUrl = GetFrontendBaseUrl();
+        var resetUrl = $"{frontendBaseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
 
         var body = $@"
             <h2>Solicitud de Restablecimiento de Contraseña</h2>
@@ -64,6 +66,28 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         ";
 
         await SendEmailAsync(email, subject, body);
+    }
+
+    private string GetFrontendBaseUrl()
+    {
+        var configuredUrl = configuration["AppSettings:FrontendUrl"]
+            ?? configuration["FrontendUrl"]
+            ?? "https://novabank-nine-rosy.vercel.app";
+
+        var normalizedUrl = configuredUrl.Trim().TrimEnd('/');
+
+        if (normalizedUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            normalizedUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedUrl;
+        }
+
+        if (normalizedUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"http://{normalizedUrl}";
+        }
+
+        return $"https://{normalizedUrl}";
     }
 
     private async Task SendEmailAsync(string to, string subject, string body)
