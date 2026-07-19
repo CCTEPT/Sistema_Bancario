@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { Pencil, X } from 'lucide-react';
 import { EditProfileForm } from '@/features/users/pages/EditProfileForm.jsx';
+import defaultAvatarImg from '../../../assets/img/avatar.png';
 
 export const ProfileModal = ({ user, open, onClose }) => {
   const [editing, setEditing] = useState(false);
@@ -19,7 +20,7 @@ export const ProfileModal = ({ user, open, onClose }) => {
     // opcional: recargar datos del store si lo necesitas
   };
 
-  const avatarSrc = preview || user?.profilePicture || '/assets/img/avatar.png';
+  const avatarSrc = preview || user?.profilePicture || defaultAvatarImg;
 
   return (
     <Dialog
@@ -58,7 +59,7 @@ export const ProfileModal = ({ user, open, onClose }) => {
                 src={avatarSrc}
                 alt={user?.username}
                 className='w-24 h-24 rounded-full object-cover border-2 border-white/20'
-                onError={(e) => { e.target.src = '/assets/img/avatar.png'; }}
+                onError={(e) => { e.target.src = defaultAvatarImg; }}
               />
             </div>
 

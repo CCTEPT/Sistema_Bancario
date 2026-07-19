@@ -17,7 +17,7 @@ const getStoredToken = () => {
 
 const axiosAuth = axios.create({
     baseURL: import.meta.env.VITE_AUTH,
-    timeout: 5000,
+    timeout: 20000,
     headers: {
         'Content-Type': 'application/json'
     },
@@ -25,7 +25,7 @@ const axiosAuth = axios.create({
 
 const axiosRegister = axios.create({
     baseURL: import.meta.env.VITE_AUTH,
-    timeout: 5000,
+    timeout: 20000,
     headers:{
         'Content-Type': 'application/json'
     }
@@ -33,7 +33,7 @@ const axiosRegister = axios.create({
 
 const axiosBank = axios.create({
     baseURL: import.meta.env.VITE_BANK_SERVICE,
-    timeout: 5000,
+    timeout: 20000,
     headers: {
         'Content-Type': 'application/json'
     }
@@ -41,7 +41,7 @@ const axiosBank = axios.create({
 
 const axiosFinancial = axios.create({
     baseURL: import.meta.env.VITE_FINANCIAL_SERVICE,
-    timeout: 5000,
+    timeout: 20000,
     headers: {
         'Content-Type': 'application/json'
     }

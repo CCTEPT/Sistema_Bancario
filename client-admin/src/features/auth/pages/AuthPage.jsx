@@ -2,6 +2,7 @@ import { LoginForm } from '../components/LoginForm.jsx';
 import { ForgotPass } from '../components/ForgotPass.jsx';
 import { RegisterForm } from '../components/RegisterForm.jsx';
 import { useState, useEffect, useRef } from 'react';
+import authLogo from '../../../assets/img/icon.png';
 
 export const AuthPage = () => {
   const [isForgot, setIsForgot] = useState(false);
@@ -49,7 +50,7 @@ export const AuthPage = () => {
               />
             ) : (
               <img
-                src='/src/assets/img/icon.png'
+                src={authLogo}
                 alt='NovaBank Logo'
                 className='w-20 h-20 object-contain'
               />
