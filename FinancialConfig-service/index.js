@@ -5,6 +5,7 @@ import Fastify from 'fastify'
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import jwt from '@fastify/jwt'
+import cors from '@fastify/cors'
 import { connectDB } from './configs/db.js'
 
 import accountTypeRoutes from './src/routes/accountType.routes.js'
@@ -14,6 +15,19 @@ import exchangeRoutes from './src/routes/exchange.routes.js'
 const app = Fastify({ logger: true })
 
 await connectDB()
+
+const frontendOrigin = process.env.FRONTEND_URL || 'https://novabank-nine-rosy.vercel.app';
+
+await app.register(cors, {
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    frontendOrigin
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+})
 
 app.addHook('onRequest', async (request, reply) => {
   reply.header('Access-Control-Allow-Origin', request.headers.origin || '*')

@@ -31,10 +31,13 @@ if (!process.env.AUTH_SERVICE_URL) {
 }
 
 // Registro de CORS antes de las rutas
+const frontendOrigin = process.env.FRONTEND_URL || 'https://novabank-nine-rosy.vercel.app';
+
 await app.register(cors, {
   origin: [
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    frontendOrigin
   ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
